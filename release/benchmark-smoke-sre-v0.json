@@ -1,0 +1,44 @@
+{
+  "format": "decant-benchmark-smoke",
+  "version": 0,
+  "result_status": "not_measured",
+  "workload": {
+    "scenario": "sre-v0-primary",
+    "seed": 42,
+    "data_deliveries": 100000,
+    "command": ["decant", "demo", "sre"]
+  },
+  "expected": {
+    "output_sha256": "156335465e1de162f580d74bbb994daf658b16f46c17cdd757c912133f12eeb3",
+    "accepted": 98750,
+    "duplicate_noops": 1000,
+    "late_rejected": 250,
+    "included_facts": 2,
+    "p99_previous_ms": 180,
+    "p99_current_ms": 720,
+    "payment_error_rate_ppm": 32000,
+    "provenance_prefix": "decant://"
+  },
+  "future_required_baselines": [
+    "last-n-raw-events",
+    "time-window-field-filter",
+    "rag-recent-event-text",
+    "hand-built-aggregation"
+  ],
+  "future_required_measurement_fields": [
+    "git_commit",
+    "build_profile",
+    "rust_version",
+    "os_kernel_architecture",
+    "cpu_ram_storage_filesystem",
+    "dependency_versions",
+    "configuration",
+    "dataset_version_seed",
+    "event_size_key_cardinality",
+    "warmup_duration",
+    "run_duration",
+    "run_count_variance",
+    "raw_artifacts",
+    "known_limitations"
+  ]
+}

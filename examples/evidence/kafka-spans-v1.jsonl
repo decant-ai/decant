@@ -1,0 +1,4 @@
+{"time_ns":100000000000,"trace_id":"00000000000000000000000000000001","span_id":"0000000000000001","kind":2,"status":1,"duration_ns":10000000,"service":"checkout","version":"v1","protected":"synthetic-private-detail"}
+{"time_ns":200000000000,"trace_id":"00000000000000000000000000000001","span_id":"0000000000000002","kind":2,"status":2,"duration_ns":20000000,"service":"checkout","version":"v1","protected":"synthetic-private-detail"}
+{"time_ns":400000000000,"trace_id":"00000000000000000000000000000001","span_id":"0000000000000003","kind":2,"status":0,"duration_ns":100000000,"service":"checkout","version":"v2","protected":"synthetic-private-detail"}
+{"time_ns":600000000000,"trace_id":"00000000000000000000000000000001","span_id":"0000000000000004","kind":2,"status":2,"duration_ns":200000000,"service":"checkout","version":"v2","protected":"synthetic-private-detail"}

@@ -1,0 +1,16 @@
+[package]
+name = "decant-kafka"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+rust-version.workspace = true
+
+[dependencies]
+decant-ir = { path = "../decant-ir" }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = { version = "=1.0.151" }
+sha2 = { version = "=0.11.0", default-features = false }
+
+[dev-dependencies]
+decant-state = { path = "../decant-state" }

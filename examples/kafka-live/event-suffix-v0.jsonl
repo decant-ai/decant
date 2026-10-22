@@ -1,0 +1,1 @@
+{"record_format":"decant-kafka-event","record_version":0,"schema_id":"synthetic.kafka.metric.v0","event_time_ns":400,"payload":[{"name":"sample","value":{"kind":"u64","value":4}}]}

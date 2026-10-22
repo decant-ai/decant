@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: 2026 Eshan Vaid
+# SPDX-License-Identifier: Apache-2.0
+# OpenTelemetry Demo 3.0.0 minimal-compose override for a local trace capture.
+services:
+  otel-collector:
+    command:
+      - --config=/etc/otelcol-config.yml
+      - --config=/etc/otelcol-config-extras.yml
+      - --config=/etc/otelcol-config-decant.yml
+      - --feature-gates=service.profilesSupport
+    volumes:
+      - ${DECANT_OTEL_CAPTURE_CONFIG:?set DECANT_OTEL_CAPTURE_CONFIG}:/etc/otelcol-config-decant.yml:ro
+      - ${DECANT_OTEL_CAPTURE_DIR:?set DECANT_OTEL_CAPTURE_DIR}:/decant-capture:rw

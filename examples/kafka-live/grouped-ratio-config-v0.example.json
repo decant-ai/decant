@@ -1,0 +1,70 @@
+{
+  "format": "decant-kafka-live-config",
+  "version": 3,
+  "bootstrap_servers": "127.0.0.1:9092",
+  "topic": "live-orders",
+  "source_namespace": "live-orders-stream",
+  "expected_cluster_id": "REPLACE_WITH_CLUSTER_ID",
+  "expected_topic_id": "AQEBAQEBAQEBAQEBAQEBAQ",
+  "partitions": [
+    {
+      "partition": 0,
+      "start_offset": 0
+    }
+  ],
+  "checkpoint_directory": "/tmp/decant-semantic-checkpoints",
+  "epoch_start_ns": 0,
+  "epoch_end_ns": 2000000000000000000,
+  "accepted_identity_limit": 50000,
+  "accepted_event_byte_limit": 67108864,
+  "poll_timeout_ms": 1000,
+  "idle_poll_limit": 2,
+  "max_records": 10000,
+  "context": {
+    "format": "decant-kafka-grouped-ratio-context-request",
+    "version": 0,
+    "fact_id": "error-rate-by-service",
+    "group_field": "service",
+    "predicate": {
+      "field": "is_error",
+      "equals": true
+    },
+    "lookback_ns": 600000000000,
+    "evidence_limit": 3,
+    "byte_budget": 16384
+  },
+  "egress": {
+    "format": "decant-kafka-field-egress-policy",
+    "version": 0,
+    "fields": [
+      {
+        "field": "is_error",
+        "action": "allow"
+      },
+      {
+        "field": "service",
+        "action": "allow"
+      }
+    ]
+  },
+  "mapping": {
+    "format": "decant-kafka-json-object-mapping",
+    "version": 0,
+    "event_time": {
+      "field": "timestamp",
+      "unit": "milliseconds"
+    },
+    "payload": [
+      {
+        "source": "service",
+        "target": "service",
+        "type": "utf8"
+      },
+      {
+        "source": "is_error",
+        "target": "is_error",
+        "type": "bool"
+      }
+    ]
+  }
+}

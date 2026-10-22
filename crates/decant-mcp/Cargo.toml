@@ -1,0 +1,19 @@
+[package]
+name = "decant-mcp"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+rust-version.workspace = true
+
+[dependencies]
+decant-compiler = { path = "../decant-compiler" }
+rmcp = { version = "=3.2.0", default-features = false, features = ["server"] }
+serde_json = { version = "=1.0.151" }
+tokio = { version = "=1.53.1", default-features = false, features = ["io-util", "sync"] }
+
+[dev-dependencies]
+rmcp = { version = "=3.2.0", default-features = false, features = ["client"] }
+decant-ir = { path = "../decant-ir" }
+decant-state = { path = "../decant-state" }
+tokio = { version = "=1.53.1", default-features = false, features = ["io-util", "macros", "rt", "sync", "time"] }

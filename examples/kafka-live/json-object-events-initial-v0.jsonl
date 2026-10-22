@@ -1,0 +1,3 @@
+{"observed_time":100,"raw_ok":true,"raw_service":"private-selected-service-a","private_unselected":"private-unselected-value-a"}
+{"observed_time":200,"raw_ok":false,"raw_service":"private-selected-service-b","private_unselected":"private-unselected-value-b"}
+{"observed_time":300,"raw_ok":true,"raw_service":"private-selected-service-c","private_unselected":"private-unselected-value-c"}

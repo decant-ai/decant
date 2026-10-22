@@ -1,0 +1,62 @@
+{
+  "format": "decant-kafka-mcp-pilot-benchmark-spec",
+  "version": 0,
+  "result_status": "not_measured",
+  "workload": {
+    "seed": 42,
+    "broker_image": "apache/kafka:4.3.1",
+    "partition_count": 1,
+    "run_count": 3,
+    "records_per_run": 10000,
+    "checkpoint_cadence_records": 250,
+    "retention_ns": 60000000000,
+    "context_item_limit": 64,
+    "context_byte_budget": 16384,
+    "mcp_latency_samples_per_run": 30
+  },
+  "baselines": [
+    "last-64-raw-events",
+    "last-60s-allowlisted-events",
+    "rag-recent-event-text",
+    "hand-built-latest-transition-aggregation"
+  ],
+  "required_measurements": [
+    "git_commit",
+    "build_profile",
+    "rust_version",
+    "os_kernel_architecture",
+    "cpu_ram_storage_filesystem",
+    "dependency_versions",
+    "configuration",
+    "dataset_version_seed",
+    "event_size_key_cardinality",
+    "warmup_duration",
+    "run_duration",
+    "run_count_variance",
+    "raw_artifacts",
+    "throughput",
+    "mcp_p50_p95_p99_added_latency",
+    "sampled_peak_rss",
+    "context_reduction",
+    "task_fidelity",
+    "privacy_leakage",
+    "restart_replay_correctness",
+    "known_limitations"
+  ],
+  "pilot_engineering_gates": {
+    "minimum_throughput_events_per_second_milli": 100000,
+    "maximum_mcp_p99_us": 5000000,
+    "maximum_sampled_peak_rss_kib": 524288,
+    "maximum_throughput_range_ppm": 500000,
+    "maximum_context_bytes": 16384,
+    "required_task_fidelity_ppm": 1000000,
+    "maximum_protected_output_matches": 0,
+    "required_restart_context_equal": true
+  },
+  "non_claims": [
+    "engineering targets are not published measurements",
+    "one pinned local broker is not a compatibility matrix",
+    "baseline byte comparisons are not baseline throughput comparisons",
+    "passing does not establish exactly-once delivery, durability, security, privacy, or general production readiness"
+  ]
+}

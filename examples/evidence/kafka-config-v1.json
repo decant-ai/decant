@@ -1,0 +1,41 @@
+{
+  "format": "decant-kafka-evidence-config",
+  "version": 1,
+  "bootstrap_servers": "localhost:9092",
+  "topic": "decant-spans",
+  "source_namespace": "example.sre-evidence",
+  "expected_cluster_id": "replace-with-broker-cluster-id",
+  "expected_topic_id": "AQEBAQEBAQEBAQEBAQEBAQ",
+  "partitions": [{"partition": 0, "start_offset": 0}],
+  "checkpoint_directory": "/var/lib/decant/evidence-checkpoints",
+  "epoch_start_ns": 0,
+  "epoch_end_ns": 4102444800000000000,
+  "accepted_identity_limit": 100000,
+  "accepted_event_byte_limit": 67108864,
+  "poll_timeout_ms": 250,
+  "lifecycle": {
+    "version": 0, "records_between_checkpoints": 1000,
+    "idle_observations_between_checkpoints": 20,
+    "retained_checkpoint_generations": 3
+  },
+  "security": {"version": 0, "mode": "tls", "ca_location": null},
+  "recipe": {
+    "version": 1, "window_ns": 300000000000, "retention_ns": 600000000000,
+    "max_services": 256, "output_bytes": 16384,
+    "policy": {"allow_service_names": true, "allow_service_versions": false}
+  },
+  "mapping": {
+    "format": "decant-kafka-json-object-mapping", "version": 1,
+    "entity_key": {"source": "utf8_projection", "field": "trace.id"},
+    "event_time": {"field": "time_ns", "unit": "nanoseconds"},
+    "payload": [
+      {"source": "trace_id", "target": "trace.id", "type": "utf8"},
+      {"source": "span_id", "target": "span.id", "type": "utf8"},
+      {"source": "kind", "target": "span.kind", "type": "u64"},
+      {"source": "status", "target": "status.code", "type": "u64"},
+      {"source": "duration_ns", "target": "duration.ns", "type": "u64"},
+      {"source": "service", "target": "service.name", "type": "utf8"},
+      {"source": "version", "target": "service.version", "type": "utf8"}
+    ]
+  }
+}

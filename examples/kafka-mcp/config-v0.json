@@ -1,0 +1,102 @@
+{
+  "format": "decant-kafka-mcp-service-config",
+  "version": 0,
+  "bootstrap_servers": "localhost:9092",
+  "topic": "decant-events",
+  "source_namespace": "example.kafka.material-change",
+  "expected_cluster_id": "replace-with-broker-cluster-id",
+  "expected_topic_id": "AQEBAQEBAQEBAQEBAQEBAQ",
+  "partitions": [
+    {
+      "partition": 0,
+      "start_offset": 0
+    }
+  ],
+  "checkpoint_directory": "/var/lib/decant/example-checkpoints",
+  "epoch_start_ns": 0,
+  "epoch_end_ns": 4102444800000000000,
+  "accepted_identity_limit": 100000,
+  "accepted_event_byte_limit": 67108864,
+  "poll_timeout_ms": 250,
+  "lifecycle": {
+    "version": 0,
+    "records_between_checkpoints": 10000,
+    "idle_observations_between_checkpoints": 20,
+    "retained_checkpoint_generations": 3
+  },
+  "security": {
+    "mode": "tls_sasl_scram",
+    "version": 0,
+    "ca_location": null,
+    "mechanism": "sha512",
+    "username_env": "DECANT_KAFKA_USERNAME",
+    "password_env": "DECANT_KAFKA_PASSWORD"
+  },
+  "mapping": {
+    "format": "decant-kafka-json-object-mapping",
+    "version": 1,
+    "entity_key": {
+      "source": "utf8_projection",
+      "field": "service"
+    },
+    "event_time": {
+      "field": "observed_time_unix_nano",
+      "unit": "nanoseconds"
+    },
+    "payload": [
+      {
+        "source": "service_name",
+        "target": "service",
+        "type": "utf8"
+      },
+      {
+        "source": "metric_name",
+        "target": "series",
+        "type": "utf8"
+      },
+      {
+        "source": "metric_value",
+        "target": "value",
+        "type": "u64"
+      },
+      {
+        "source": "authorization",
+        "target": "authorization",
+        "type": "utf8"
+      }
+    ]
+  },
+  "egress": {
+    "format": "decant-kafka-field-egress-policy",
+    "version": 0,
+    "fields": [
+      {
+        "field": "authorization",
+        "action": "deny"
+      },
+      {
+        "field": "series",
+        "action": "allow"
+      },
+      {
+        "field": "service",
+        "action": "allow"
+      },
+      {
+        "field": "value",
+        "action": "allow"
+      }
+    ]
+  },
+  "context": {
+    "format": "decant-kafka-material-change-context-request",
+    "version": 1,
+    "view_id": "service-latency",
+    "retention_ns": 3600000000000,
+    "discriminator_field": "series",
+    "value_field": "value",
+    "item_limit": 64,
+    "byte_budget": 16384,
+    "entity_key_egress": "allow_lower_hex"
+  }
+}

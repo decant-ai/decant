@@ -1,0 +1,164 @@
+# ============================================================
+# Secrets and local environment
+# ============================================================
+
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+
+secrets/
+credentials/
+private-keys/
+
+# ============================================================
+# Cloud / infrastructure credentials and local state
+# ============================================================
+
+.aws/
+.gcp/
+.azure/
+.kube/
+
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl.backup
+
+# ============================================================
+# Local databases / runtime state
+# ============================================================
+
+data/
+state/
+runtime/
+tmp/
+temp/
+
+*.db
+*.sqlite
+*.sqlite3
+
+rocksdb/
+parquet-data/
+replay-data/
+checkpoints/
+
+# ============================================================
+# Logs / profiling / diagnostics
+# ============================================================
+
+*.log
+logs/
+
+*.prof
+*.pprof
+*.trace
+flamegraph.svg
+
+coverage/
+lcov.info
+
+# ============================================================
+# Rust
+# ============================================================
+
+target/
+
+# Keep Cargo.lock for applications/binaries.
+# Do NOT ignore Cargo.lock for Decant.
+
+# ============================================================
+# Go
+# ============================================================
+
+bin/
+vendor/
+
+# ============================================================
+# Python
+# ============================================================
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ============================================================
+# Node / TypeScript
+# ============================================================
+
+node_modules/
+dist/
+.npm/
+.yarn/
+.pnpm-store/
+
+# ============================================================
+# IDE/editor
+# ============================================================
+
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ============================================================
+# macOS
+# ============================================================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ============================================================
+# Local tooling and scratch artifacts
+# ============================================================
+
+.codex/
+.agent-work/
+.worktrees/
+
+# ============================================================
+# Private planning material
+# ============================================================
+
+founder/
+prompts/
+docs/internal/
+
+# Private source/research material
+docs/source/
+
+# ============================================================
+# Benchmark outputs
+# ============================================================
+
+benchmarks/results/
+benchmarks/raw/
+benchmarks/tmp/
+
+# Keep benchmark fixtures/source/config in git;
+# ignore large or machine-specific result artifacts.
+
+# ============================================================
+# Scratch files
+# ============================================================
+
+scratch/
+notes-private/
+.local/
+/decant-first-report/
+/decant-own-report/
+release/public-release-approval-v0.json
+release/evidence-alpha-approval-v1.json

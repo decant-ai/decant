@@ -1,0 +1,32 @@
+[package]
+name = "decant-cli"
+version = "0.1.0-alpha.1"
+edition.workspace = true
+license.workspace = true
+publish = false
+rust-version.workspace = true
+
+[[bin]]
+name = "decant"
+path = "src/main.rs"
+
+[dependencies]
+decant-compiler = { path = "../decant-compiler" }
+decant-fixtures = { path = "../decant-fixtures" }
+decant-ir = { path = "../decant-ir" }
+decant-jsonl = { path = "../decant-jsonl" }
+decant-kafka = { path = "../decant-kafka" }
+decant-kafka-client = { path = "../decant-kafka-client" }
+decant-kafka-live = { path = "../decant-kafka-live" }
+decant-mcp = { path = "../decant-mcp" }
+decant-otlp-ingest = { path = "../decant-otlp-ingest" }
+decant-runtime = { path = "../decant-runtime" }
+decant-state = { path = "../decant-state" }
+decant-storage = { path = "../decant-storage" }
+rmcp = { version = "=3.2.0", default-features = false, features = ["server"] }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = { version = "=1.0.151" }
+tokio = { version = "=1.53.1", default-features = false, features = ["io-std", "macros", "rt", "sync", "signal", "time", "fs"] }
+
+[dev-dependencies]
+decant-ingest = { path = "../decant-ingest" }

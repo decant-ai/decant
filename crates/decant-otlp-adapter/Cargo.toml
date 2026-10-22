@@ -1,0 +1,11 @@
+[package]
+name = "decant-otlp-adapter"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+rust-version.workspace = true
+
+[dependencies]
+decant-ir = { path = "../decant-ir" }
+decant-otlp-json = { path = "../decant-otlp-json" }

@@ -1,0 +1,12 @@
+{
+  "format": "decant-evidence-evaluation-spec",
+  "version": 1,
+  "result_status": "not_measured",
+  "recipe": {"version": 1, "window_ns": 300000000000, "retention_ns": 600000000000, "max_services": 256, "output_bytes": 16384, "policy": {"allow_service_names": true, "allow_service_versions": true}},
+  "cases": ["regression", "healthy", "version_only", "regression_no_version_change", "missing_baseline", "missing_version", "missing_service", "non_server", "duplicates", "conflict", "late", "partial_retention", "output_omission", "high_cardinality"],
+  "baseline": "independent raw-capture SQLite aggregation with bounded report packing",
+  "load": {"seed": 104, "sizes": [10000, 20000], "services": 8, "warmups_per_case_and_implementation": 1, "trials": 3, "order": "alternate per trial", "timeout_seconds": 30, "maximum_peak_rss_bytes": 536870912, "maximum_median_size_ratio_milli": 3500},
+  "correctness": {"required_all_declared_facts": true, "unsupported_claims": 0, "protected_sentinel_matches": 0, "repeated_evidence_bytes_equal": true},
+  "external_commercial_hypothesis": {"required_noninferior_correctness": true, "maximum_unsupported_claims": 0, "minimum_investigation_time_or_total_model_input_improvement_percent": 20, "baselines": ["configured SQL/script", "configured Grafana/MCP", "applicable SRE-agent workflow"], "status": "not_run"},
+  "limitations": ["synthetic engineering cases do not establish customer utility", "report byte size is not model token usage", "SQLite baseline has no Decant recovery or policy receipts", "external workflow and human comparisons require separate authorized evidence", "no production capacity, privacy or security claim", "publication requires independent reproduction and approval"]
+}

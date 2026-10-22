@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Eshan Vaid
+# SPDX-License-Identifier: Apache-2.0
+# Additive config loaded after the OpenTelemetry Demo base/extras configs.
+exporters:
+  file/decant:
+    path: /decant-capture/traces.jsonl
+    format: json
+    append: false
+    flush_interval: 1s
+
+service:
+  pipelines:
+    traces:
+      exporters: [debug, span_metrics, file/decant]

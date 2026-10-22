@@ -1,0 +1,2 @@
+{"observed_time":100,"raw_secret":"private-material-secret","raw_series":"latency","raw_service":"checkout","raw_value":10,"private_unselected":"private-unselected-value"}
+{"observed_time":101,"raw_secret":"private-material-secret","raw_series":"latency","raw_service":"checkout","raw_value":20,"private_unselected":"private-unselected-value"}
