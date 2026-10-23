@@ -47,3 +47,6 @@ See [setup and compatibility limits](GRAFANA_SETUP.md).
 The backend library also contains bounded sampled Tempo operation/dependency
 evidence with explicit gaps. It is not exposed as an investigation CLI command.
 See [trace evidence semantics and limits](TRACE_EVIDENCE.md).
+The Loki library recipe compares scoped log counts, with body acquisition off
+unless bounded field projection is explicitly configured. See
+[log evidence semantics and limits](LOG_EVIDENCE.md).

@@ -4,6 +4,7 @@
 mod bounded_json;
 mod evidence;
 pub mod grafana;
+pub mod loki;
 pub mod metrics;
 pub mod tempo;
 pub mod transport;
