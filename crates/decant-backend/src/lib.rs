@@ -2,6 +2,8 @@
 #![forbid(unsafe_code)]
 
 mod bounded_json;
+mod evidence;
 pub mod grafana;
 pub mod metrics;
+pub mod tempo;
 pub mod transport;

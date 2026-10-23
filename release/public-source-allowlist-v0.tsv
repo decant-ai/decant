@@ -22,6 +22,7 @@ file	docs/release/METRICS_SEMANTICS.md
 file	docs/release/PRODUCTION_PILOT_CHECKLIST.md
 file	docs/release/ROLLBACK.md
 file	docs/release/SUPPORTED_SCOPE.md
+file	docs/release/TRACE_EVIDENCE.md
 file	release/benchmark-smoke-sre-v0.json
 file	release/evidence-evaluation-spec-v1.json
 file	release/kafka-mcp-pilot-benchmark-spec-v0.json
