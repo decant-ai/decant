@@ -106,16 +106,23 @@ fn material(wrong_host: bool) -> (Vec<u8>, Vec<u8>) {
 #[derive(Clone)]
 pub struct Reply {
     pub bytes: Vec<u8>,
+    pub query_time: bool,
     pub delay_headers: Duration,
     pub delay_body: Duration,
 }
 impl Reply {
+    pub fn query_json(body: &str) -> Self {
+        let mut reply = Self::json(200, body);
+        reply.query_time = true;
+        reply
+    }
     pub fn json(status: u16, body: &str) -> Self {
         Self::raw(format!("HTTP/1.1 {status} Test\r\nContent-Length: {}\r\nContent-Type: application/json\r\nConnection: close\r\n\r\n{body}", body.len()).into_bytes())
     }
     pub fn raw(bytes: Vec<u8>) -> Self {
         Self {
             bytes,
+            query_time: false,
             delay_headers: Duration::ZERO,
             delay_body: Duration::ZERO,
         }
@@ -175,6 +182,27 @@ impl Server {
                     .push(String::from_utf8_lossy(&request).into_owned());
                 let Some(reply) = replies.get(index) else {
                     continue;
+                };
+                let adjusted;
+                let reply = if reply.query_time {
+                    let request = String::from_utf8_lossy(&request);
+                    let time = request
+                        .split("time=")
+                        .nth(1)
+                        .unwrap()
+                        .split(['&', ' '])
+                        .next()
+                        .unwrap();
+                    let raw = String::from_utf8_lossy(&reply.bytes);
+                    let body = raw
+                        .split("\r\n\r\n")
+                        .nth(1)
+                        .unwrap()
+                        .replace("\"__TIME__\"", time);
+                    adjusted = Reply::json(200, &body);
+                    &adjusted
+                } else {
+                    reply
                 };
                 index += 1;
                 thread::sleep(reply.delay_headers);

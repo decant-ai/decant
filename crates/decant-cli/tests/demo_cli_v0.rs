@@ -2,7 +2,7 @@ use std::ffi::OsString;
 use std::process::{Command, Output};
 
 const GOLDEN: &[u8] = include_bytes!("golden/sre-demo-v0.json");
-const HELP_TEXT: &[u8] = b"Decant local-first context compiler\n\nUsage:\n  decant evidence --help\n  decant evidence demo\n  decant demo sre\n  decant ingest otlp-jsonl --file <PATH>\n  decant ingest kafka-json --config <PATH>\n  decant serve kafka-mcp --config <PATH>\n  decant --help\n  decant --version\n";
+const HELP_TEXT: &[u8] = b"Decant local-first context compiler\n\nUsage:\n  decant connect grafana --help\n  decant doctor --help\n  decant evidence --help\n  decant evidence demo\n  decant demo sre\n  decant ingest otlp-jsonl --file <PATH>\n  decant ingest kafka-json --config <PATH>\n  decant serve kafka-mcp --config <PATH>\n  decant --help\n  decant --version\n";
 const VERSION_TEXT: &[u8] = b"decant 0.1.0-alpha.1\n";
 const USAGE_ERROR_TEXT: &[u8] =
     b"error: invalid usage\n\nUsage:\n  decant demo sre\n  decant ingest otlp-jsonl --file <PATH>\n  decant ingest kafka-json --config <PATH>\n  decant serve kafka-mcp --config <PATH>\n  decant --help\n  decant --version\n";

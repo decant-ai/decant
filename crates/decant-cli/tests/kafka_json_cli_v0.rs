@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 const PROCESSING_ERROR: &[u8] = b"error: Kafka JSON processing failed\n";
 const USAGE_ERROR: &[u8] = b"error: invalid usage\n\nUsage:\n  decant demo sre\n  decant ingest otlp-jsonl --file <PATH>\n  decant ingest kafka-json --config <PATH>\n  decant serve kafka-mcp --config <PATH>\n  decant --help\n  decant --version\n";
-const HELP_TEXT: &[u8] = b"Decant local-first context compiler\n\nUsage:\n  decant evidence --help\n  decant evidence demo\n  decant demo sre\n  decant ingest otlp-jsonl --file <PATH>\n  decant ingest kafka-json --config <PATH>\n  decant serve kafka-mcp --config <PATH>\n  decant --help\n  decant --version\n";
+const HELP_TEXT: &[u8] = b"Decant local-first context compiler\n\nUsage:\n  decant connect grafana --help\n  decant doctor --help\n  decant evidence --help\n  decant evidence demo\n  decant demo sre\n  decant ingest otlp-jsonl --file <PATH>\n  decant ingest kafka-json --config <PATH>\n  decant serve kafka-mcp --config <PATH>\n  decant --help\n  decant --version\n";
 
 static NEXT_CASE: AtomicUsize = AtomicUsize::new(0);
 

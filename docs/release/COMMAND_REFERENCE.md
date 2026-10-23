@@ -3,6 +3,16 @@
 All commands are experimental preview contracts. Use `decant evidence --help`
 for the new evidence workflow and per-subcommand help for exact arguments.
 
+## Grafana setup and query diagnostics
+
+- Run decant connect grafana --help for guided datasource and scope setup.
+- Run decant doctor --profile production to check the saved profile.
+
+These are explicit HTTPS read operations, not local file analysis. See
+[Grafana setup](GRAFANA_SETUP.md) for credential references, mappings,
+permissions, bounded probes and exit statuses. Doctor readiness is not a
+diagnosis, service-health assessment or complete investigation coverage.
+
 ## Evidence (preferred own-data workflow)
 
 - `decant evidence demo`: labelled synthetic Markdown report.

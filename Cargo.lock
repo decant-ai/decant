@@ -134,6 +134,7 @@ dependencies = [
 name = "decant-cli"
 version = "0.1.0-alpha.1"
 dependencies = [
+ "decant-backend",
  "decant-compiler",
  "decant-fixtures",
  "decant-ingest",
@@ -147,6 +148,7 @@ dependencies = [
  "decant-runtime",
  "decant-state",
  "decant-storage",
+ "native-tls",
  "rmcp",
  "serde",
  "serde_json",

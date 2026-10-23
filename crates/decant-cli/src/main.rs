@@ -4,6 +4,7 @@
 
 mod demo;
 mod evidence;
+mod grafana;
 mod kafka_json;
 mod kafka_mcp;
 mod lifecycle;
@@ -14,7 +15,7 @@ use std::ffi::OsStr;
 use std::io::{self, Write};
 use std::process::ExitCode;
 
-const HELP_TEXT: &[u8] = b"Decant local-first context compiler\n\nUsage:\n  decant evidence --help\n  decant evidence demo\n  decant demo sre\n  decant ingest otlp-jsonl --file <PATH>\n  decant ingest kafka-json --config <PATH>\n  decant serve kafka-mcp --config <PATH>\n  decant --help\n  decant --version\n";
+const HELP_TEXT: &[u8] = b"Decant local-first context compiler\n\nUsage:\n  decant connect grafana --help\n  decant doctor --help\n  decant evidence --help\n  decant evidence demo\n  decant demo sre\n  decant ingest otlp-jsonl --file <PATH>\n  decant ingest kafka-json --config <PATH>\n  decant serve kafka-mcp --config <PATH>\n  decant --help\n  decant --version\n";
 const VERSION_TEXT: &str = concat!("decant ", env!("CARGO_PKG_VERSION"), "\n");
 const USAGE_ERROR_TEXT: &[u8] =
     b"error: invalid usage\n\nUsage:\n  decant demo sre\n  decant ingest otlp-jsonl --file <PATH>\n  decant ingest kafka-json --config <PATH>\n  decant serve kafka-mcp --config <PATH>\n  decant --help\n  decant --version\n";
@@ -28,6 +29,9 @@ fn main() -> ExitCode {
     let mut arguments = env::args_os();
     let _program = arguments.next();
     let first = arguments.next();
+    if matches!(first.as_deref(), Some(value) if value == "connect" || value == "doctor") {
+        return grafana::run(first.as_deref().unwrap(), arguments);
+    }
     if first.as_deref() == Some(OsStr::new("evidence")) {
         return evidence::run(arguments);
     }
