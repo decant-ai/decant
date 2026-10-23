@@ -50,3 +50,7 @@ See [trace evidence semantics and limits](TRACE_EVIDENCE.md).
 The Loki library recipe compares scoped log counts, with body acquisition off
 unless bounded field projection is explicitly configured. See
 [log evidence semantics and limits](LOG_EVIDENCE.md).
+The application library can compose these captures into versioned JSON/Markdown
+investigation documents and private offline replay bundles. It does not add a
+standalone investigation command or model reasoning. See
+[investigation and replay limits](INVESTIGATION_REPLAY.md).

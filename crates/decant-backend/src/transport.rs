@@ -7,7 +7,8 @@ use tokio::time::Instant;
 pub const MAX_RESPONSE_BYTES: usize = 4 * 1024 * 1024;
 pub const MAX_TOTAL_BYTES: usize = 64 * 1024 * 1024;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum BackendErrorV1 {
     InvalidConfiguration,
     InvalidRequest,

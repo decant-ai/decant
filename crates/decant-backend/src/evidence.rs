@@ -75,6 +75,26 @@ impl fmt::Debug for ReadV1 {
     }
 }
 impl ReadV1 {
+    pub fn plan_id(&self) -> &str {
+        &self.plan
+    }
+    pub fn key(&self) -> &str {
+        &self.key
+    }
+    pub fn response(&self) -> Result<&[u8], E> {
+        self.response.as_deref().map_err(|e| *e)
+    }
+    pub fn attempted(&self) -> bool {
+        self.attempted
+    }
+    /// An unsent request can only carry the session's pre-request budget refusal.
+    pub fn with_attempted(mut self, attempted: bool) -> Result<Self, E> {
+        if !attempted && self.response != Err(E::BudgetExhausted) {
+            return Err(E::InvalidResponse);
+        }
+        self.attempted = attempted;
+        Ok(self)
+    }
     pub(crate) fn new(plan: &str, key: String, response: Result<Vec<u8>, E>) -> Result<Self, E> {
         if response
             .as_ref()
@@ -94,6 +114,34 @@ impl ReadV1 {
             "response_hash":self.response.as_ref().ok().map(|b|hash("decant-backend-response:v1",b)),
             "reason":self.response.as_ref().err().map(ToString::to_string)})
     }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum ArtifactDomainV1 {
+    Capture,
+    Configuration,
+    Investigation,
+    Bundle,
+    Response,
+    Probe,
+}
+/// Closed domains for the versioned local artifacts; bounds precede hashing.
+pub fn artifact_hash_v1(domain: ArtifactDomainV1, bytes: &[u8]) -> Result<String, E> {
+    let (name, limit) = match domain {
+        ArtifactDomainV1::Capture => ("decant-investigation-capture:v1", 64 * 1024),
+        ArtifactDomainV1::Configuration => ("decant-investigation-config:v1", 64 * 1024),
+        ArtifactDomainV1::Investigation => ("decant-investigation:v1", 64 * 1024),
+        ArtifactDomainV1::Bundle => (
+            "decant-investigation-bundle:v1",
+            64 * 1024 * 1024 + 64 * 1024 + 64,
+        ),
+        ArtifactDomainV1::Response => ("decant-backend-response:v1", MAX_RESPONSE_BYTES),
+        ArtifactDomainV1::Probe => ("decant-investigation-probe:v1", 1024),
+    };
+    if bytes.len() > limit {
+        return Err(E::ResponseTooLarge);
+    }
+    Ok(hash(name, bytes))
 }
 pub struct EvidenceV1 {
     bytes: Vec<u8>,
