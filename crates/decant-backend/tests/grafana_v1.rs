@@ -97,6 +97,7 @@ async fn failure_empty_partial_unconfigured_and_nonfinite_are_not_ready() {
         (vector("NaN"), "unavailable"),
         (vector("+Inf"), "unavailable"),
         (vector("-1"), "unavailable"),
+        (vector("1e-999"), "unavailable"),
         (
             vector("1").replacen("{", "{\"warnings\":[\"SYNTHETIC_SECRET\"],", 1),
             "partial",

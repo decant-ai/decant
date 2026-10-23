@@ -3,4 +3,5 @@
 
 mod bounded_json;
 pub mod grafana;
+pub mod metrics;
 pub mod transport;

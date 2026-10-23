@@ -425,14 +425,21 @@ pub(crate) fn scalar_vector(value: &Value, end: u64) -> Result<Option<f64>, E> {
     if pair[0].as_f64() != Some(end as f64) {
         return Err(E::InvalidResponse);
     }
-    let number = pair[1]
+    let text = pair[1]
         .as_str()
         .filter(|s| s.len() <= 64)
-        .ok_or(E::InvalidResponse)?
-        .parse::<f64>()
-        .map_err(|_| E::InvalidResponse)?;
-    if !number.is_finite() || number < 0.0 {
+        .ok_or(E::InvalidResponse)?;
+    let number = text.parse::<f64>().map_err(|_| E::InvalidResponse)?;
+    if !number.is_finite() || number < 0.0 || underflowed(text, number) {
         return Err(E::InvalidResponse);
     }
     Ok(Some(number))
+}
+
+pub(crate) fn underflowed(text: &str, number: f64) -> bool {
+    number == 0.0
+        && text
+            .split(['e', 'E'])
+            .next()
+            .is_some_and(|mantissa| mantissa.bytes().any(|b| (b'1'..=b'9').contains(&b)))
 }
