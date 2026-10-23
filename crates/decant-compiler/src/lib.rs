@@ -4,6 +4,7 @@
 
 pub mod evidence;
 pub mod evidence_markdown;
+pub mod investigation_coverage;
 
 mod kafka_activity;
 mod kafka_grouped_ratio;
