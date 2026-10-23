@@ -249,7 +249,7 @@ impl GrafanaV1 {
                                 "v1",
                                 "query",
                             ],
-                            &[("query", &q), ("time", &time)],
+                            &[("query", &q), ("time", &format!("{end_seconds}000000000"))],
                         )
                         .await
                 }

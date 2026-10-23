@@ -31,7 +31,7 @@
 - Finite invocations or one supervised resident service; the service does not daemonize or restart itself.
 - Local stdout output for finite commands; MCP protocol-only stdout and value-safe lifecycle stderr for the resident service; local checkpoint files.
 - No external model call or hosted Decant service.
-- Network access occurs only when the user explicitly runs the Kafka client or downloads build/test inputs.
+- Backend network access is opt-in through Kafka or Grafana commands; build/test downloads are separate explicit operations.
 - No automatic usage telemetry. One source per report/runtime; no cross-source join or consistent multi-source snapshot.
 
 This document defines the supported preview and bounded production-pilot candidate, not the ultimate Decant feature set or a general production support promise.
@@ -43,3 +43,14 @@ Readiness comes from bounded scoped queries, with empty, partial and failed
 results preserved. No raw log bodies or full traces are emitted by doctor.
 This is query-access diagnostics, not a backend incident-investigation report.
 See [setup and compatibility limits](GRAFANA_SETUP.md).
+
+The backend library also contains bounded sampled Tempo operation/dependency
+evidence with explicit gaps. It is not exposed as an investigation CLI command.
+See [trace evidence semantics and limits](TRACE_EVIDENCE.md).
+The Loki library recipe compares scoped log counts, with body acquisition off
+unless bounded field projection is explicitly configured. See
+[log evidence semantics and limits](LOG_EVIDENCE.md).
+The application library can compose these captures into versioned JSON/Markdown
+investigation documents and private offline replay bundles. It does not add a
+standalone investigation command or model reasoning. See
+[investigation and replay limits](INVESTIGATION_REPLAY.md).
