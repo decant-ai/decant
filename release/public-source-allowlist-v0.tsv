@@ -14,9 +14,11 @@ file	docs/release/BINARY_PACKAGE_README.md
 file	docs/release/COMMAND_REFERENCE.md
 file	docs/release/EVIDENCE_EVALUATION.md
 file	docs/release/EVIDENCE_QUICKSTART.md
+file	docs/release/GRAFANA_SETUP.md
 file	docs/release/KAFKA_EVIDENCE.md
 file	docs/release/KNOWN_LIMITATIONS.md
 file	docs/release/MCP_COMPATIBILITY.md
+file	docs/release/METRICS_SEMANTICS.md
 file	docs/release/PRODUCTION_PILOT_CHECKLIST.md
 file	docs/release/ROLLBACK.md
 file	docs/release/SUPPORTED_SCOPE.md
@@ -52,6 +54,7 @@ file	tools/validate_local_smoke_v0.py
 file	tools/verify_binary_candidate_v1.py
 file	tools/verify_evidence_evaluation_v1.py
 tree	LICENSES/
+tree	crates/decant-backend/
 tree	crates/decant-cli/
 tree	crates/decant-compiler/
 tree	crates/decant-fixtures/

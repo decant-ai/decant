@@ -158,6 +158,7 @@ benchmarks/tmp/
 scratch/
 notes-private/
 .local/
+.decant/
 /decant-first-report/
 /decant-own-report/
 release/public-release-approval-v0.json

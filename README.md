@@ -36,13 +36,18 @@ for its gaps, report identity and selected evidence references.
 | --- | --- |
 | A completed, uncompressed OTLP **trace JSONL** capture | Analyze locally → JSON/Markdown → optional report-backed MCP |
 | Kafka records with the required span fields in explicitly mapped flat JSON | Publish the same evidence recipe at verified checkpoint cuts → local MCP |
-| Traces only inside Grafana/Tempo, Datadog, Jaeger or another backend | No direct connector yet; a backend's arbitrary JSON export is not automatically compatible |
+| Grafana with Prometheus/Mimir and optional Tempo/Loki | [Connect and check scoped query access](docs/release/GRAFANA_SETUP.md); not an incident diagnosis or trace-report command |
+| Traces only inside Datadog, Jaeger or another backend | No direct connector; a backend's arbitrary JSON export is not automatically compatible |
 
-There is no live OTLP receiver, logs/metrics recipe, arbitrary-JSON inference or
+There is no live OTLP receiver, logs recipe, general investigation CLI, arbitrary-JSON inference or
 agent-traffic proxy. You do not have to change an application's instrumentation
 if you already have a compatible capture, but obtaining that capture is a real
 setup step. Decant complements your backend and investigation agent; it replaces
-neither. A backend-connected workflow is planned, not available today.
+neither. Grafana setup and query-access diagnostics are available as a separate,
+read-only workflow; they do not turn backend responses into a trace capture.
+The internal backend library also provides bounded
+[metrics comparison recipes](docs/release/METRICS_SEMANTICS.md), not a standalone
+CLI investigation command.
 
 ## Build and run the demo
 
@@ -130,7 +135,9 @@ fetch the locked Cargo dependencies, then run:
 
 This checks deterministic correctness and repository hygiene; it is not a
 performance or independent security certification. Real Collector/Kafka tests
-are explicitly opt-in. See the [evaluation protocol](docs/release/EVIDENCE_EVALUATION.md).
+are explicitly opt-in. The ordinary gate includes synthetic loopback HTTPS
+tests and requires the OpenSSL command-line tool. See the
+[evaluation protocol](docs/release/EVIDENCE_EVALUATION.md).
 Maintainers: [local binary builds](docs/release/BINARY_CANDIDATES.md) and
 [rollback](docs/release/ROLLBACK.md).
 

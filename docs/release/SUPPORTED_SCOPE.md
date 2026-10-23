@@ -35,3 +35,11 @@
 - No automatic usage telemetry. One source per report/runtime; no cross-source join or consistent multi-source snapshot.
 
 This document defines the supported preview and bounded production-pilot candidate, not the ultimate Decant feature set or a general production support promise.
+## Grafana setup and query diagnostics
+
+The additive connect/doctor commands support one explicit HTTPS Grafana origin,
+a confirmed Prometheus-compatible datasource and optional Tempo/Loki UIDs.
+Readiness comes from bounded scoped queries, with empty, partial and failed
+results preserved. No raw log bodies or full traces are emitted by doctor.
+This is query-access diagnostics, not a backend incident-investigation report.
+See [setup and compatibility limits](GRAFANA_SETUP.md).

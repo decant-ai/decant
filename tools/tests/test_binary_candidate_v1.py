@@ -161,7 +161,7 @@ class CandidateTests(unittest.TestCase):
         inventory = json.loads(contents["SBOM.cdx.json"])
         self.assertEqual(inventory["bomFormat"], "CycloneDX")
         self.assertEqual(inventory["specVersion"], "1.6")
-        self.assertEqual(len([row for row in inventory["components"] if "purl" in row]), 99)
+        self.assertEqual(len([row for row in inventory["components"] if "purl" in row]), 168)
         self.assertEqual(inventory["compositions"][0]["aggregate"], "incomplete")
         self.assertNotIn(str(ROOT).encode(), contents["SBOM.cdx.json"])
         self.assertNotIn(b"licenses", contents["SBOM.cdx.json"])  # Declared strings, no legal selection.

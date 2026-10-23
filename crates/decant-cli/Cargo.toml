@@ -11,6 +11,7 @@ name = "decant"
 path = "src/main.rs"
 
 [dependencies]
+decant-backend = { path = "../decant-backend" }
 decant-compiler = { path = "../decant-compiler" }
 decant-fixtures = { path = "../decant-fixtures" }
 decant-ir = { path = "../decant-ir" }
@@ -29,4 +30,5 @@ serde_json = { version = "=1.0.151" }
 tokio = { version = "=1.53.1", default-features = false, features = ["io-std", "macros", "rt", "sync", "signal", "time", "fs"] }
 
 [dev-dependencies]
+native-tls = { version = "=0.2.18", default-features = false }
 decant-ingest = { path = "../decant-ingest" }
