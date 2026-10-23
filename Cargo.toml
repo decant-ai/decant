@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "crates/decant-backend",
     "crates/decant-cli",
     "crates/decant-compiler",
     "crates/decant-fixtures",

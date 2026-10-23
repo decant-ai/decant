@@ -282,7 +282,7 @@ fn repository_hygiene_is_bounded_redacted_and_not_a_security_claim() {
 #[test]
 fn dependency_inventory_is_exact_bounded_and_non_legal() {
     let allowlist = text("release/third-party-dependencies-v0.tsv");
-    assert_eq!(allowlist.lines().count(), 99);
+    assert_eq!(allowlist.lines().count(), 168);
     assert!(allowlist.lines().all(|line| line.split('\t').count() == 4));
     let validator = text("tools/check_dependency_inventory_v0.py");
     for required in [

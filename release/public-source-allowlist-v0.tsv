@@ -52,6 +52,7 @@ file	tools/validate_local_smoke_v0.py
 file	tools/verify_binary_candidate_v1.py
 file	tools/verify_evidence_evaluation_v1.py
 tree	LICENSES/
+tree	crates/decant-backend/
 tree	crates/decant-cli/
 tree	crates/decant-compiler/
 tree	crates/decant-fixtures/

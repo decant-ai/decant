@@ -115,7 +115,7 @@ def main() -> int:
     except (SystemExit, InventoryFailure):
         print("dependency inventory: failed", file=sys.stderr)
         return 1
-    print("PASS: dependency inventory v0 (99 third-party packages)")
+    print("PASS: dependency inventory v0 (168 third-party packages)")
     return 0
 
 
