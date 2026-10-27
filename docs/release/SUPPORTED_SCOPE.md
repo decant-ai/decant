@@ -2,6 +2,8 @@
 
 ## Supported developer-preview paths
 
+- `decant investigate ask`: natural-language latency/error recipe selection, deterministic conditional Grafana acquisition, and a bounded explanation with evidence. At most two model calls, explicit egress consent, unchanged private replay formats. See the [question workflow](GRAFANA_INVESTIGATION.md#ask-a-question) for scope and limits.
+
 - `decant evidence analyze --file <PATH> --config <PATH>`: a completed OTLP trace capture to versioned observed-span before/after evidence; render/verify locally or serve one immutable report over stdio MCP.
 - `decant evidence serve-kafka --config <PATH>`: the same recipe over compatible explicitly mapped Kafka spans, published only at verified checkpoint cuts with separate pending/health observations.
 - Evidence includes observed SERVER counts/error fractions, exact nearest-rank p95, permitted version observations, selected references and explicit sampling/admission/retention/output gaps. Version observation is not deployment causality or a whole-production SLO.

@@ -1,4 +1,5 @@
 //! Evidence-only investigation artifacts. No model, ambient clock or credentials.
+pub mod adaptive;
 mod bundle;
 mod store;
 pub use bundle::ReplayBundleV1;

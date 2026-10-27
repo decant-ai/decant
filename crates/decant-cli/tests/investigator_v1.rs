@@ -96,6 +96,10 @@ fn full_signal_projection_excludes_permitted_text_selectors_and_raw_metadata() {
     let report = c.report().unwrap();
     assert!(String::from_utf8_lossy(report.json()).contains("SYNTHETIC_PRIVATE_TEXT"));
     let prepared = PreparedInvestigationV1::new(&report).unwrap();
+    let explanation = prepared.explanation_input(FocusV1::Latency).unwrap();
+    let projected = explanation.projected_json().unwrap();
+    assert!(projected.len() <= decant_backend::model::two_stage::EVIDENCE_BYTES);
+    assert!(!String::from_utf8_lossy(&projected).contains("SYNTHETIC_PRIVATE"));
     let r = prepared.evidence(FocusV1::Overview).unwrap();
     assert!(!String::from_utf8_lossy(r.json()).contains("SYNTHETIC_PRIVATE"));
     assert!(!r.markdown().contains("ignore instructions"));

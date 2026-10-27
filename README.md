@@ -40,6 +40,22 @@ reading the result, optional model access, offline follow-ups and refresh.
 This workflow requires a request counter and classic latency histogram in seconds;
 missing or incompatible data remains a gap, not a healthy verdict.
 
+To ask a question, explicitly authorize model access:
+
+```sh
+./target/release/decant investigate ask --profile production --question "Why is checkout slower?" --model YOUR_MODEL_ID --model-key-env ANTHROPIC_API_KEY --allow-model-egress
+```
+
+The question applies only to the service/environment in the confirmed profile.
+This path makes at most two model calls: select a latency/error recipe, then
+explain the evidence. Between them, Decant compares metrics and conditionally
+fetches configured Tempo/Loki evidence when the selected measurement increased
+or is unknown. It saves evidence before the final call. Your question is sent to
+Anthropic; never include secrets. Backend log bodies, queries and raw traces are
+not sent to the model. Explanations are labelled interpretations, not causal proof.
+See [question workflow and limits](docs/release/GRAFANA_INVESTIGATION.md#ask-a-question).
+Two calls is a resource ceiling, not demonstrated token or cost savings.
+
 The bundled **synthetic** example produces these facts for `checkout`:
 
 | Observed measurement | Before | After |

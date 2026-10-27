@@ -183,6 +183,11 @@ pub struct GrafanaV1 {
     pub(crate) http: HttpSessionV1,
 }
 impl GrafanaV1 {
+    /// Reserve response capacity for a separate model session before any reads.
+    pub fn with_response_allowance(mut self, bytes: usize) -> Result<Self, E> {
+        self.http.restrict_bytes(bytes)?;
+        Ok(self)
+    }
     pub fn usage(&self) -> crate::transport::UsageV1 {
         self.http.usage()
     }

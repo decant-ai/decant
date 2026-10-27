@@ -2,3 +2,4 @@
 #![forbid(unsafe_code)]
 pub mod investigation;
 pub mod investigator;
+pub mod question;
