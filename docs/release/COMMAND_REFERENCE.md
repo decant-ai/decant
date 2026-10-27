@@ -8,12 +8,13 @@ for the new evidence workflow and per-subcommand help for exact arguments.
 For the read-only investigation workflow:
 
 - `decant investigate configure --profile production`: guided explicit metric and optional trace/log mappings.
+- `decant investigate ask --profile production --question "Why is checkout slower?" --model MODEL --model-key-env ANTHROPIC_API_KEY --allow-model-egress`: one planning call, deterministic conditional acquisition and one explanation call. Applies to the confirmed profile only; sends the question and confirmed service/environment names externally.
 - `decant investigate --profile production --since 15m`: acquire, save and compare evidence; Markdown by default.
 - `decant investigate follow-up --bundle ID --focus errors`: inspect the same evidence offline.
 - `decant investigate report --bundle ID --format json`: verify/recompute the original evidence report offline.
 - `decant investigate refresh --bundle ID --profile production`: acquire a new later cut without replacing the old one.
 
-Run `decant investigate --help` for exact options. Model use requires `--reason`,
+Run `decant investigate --help` for exact options. Outside `ask`, model use requires `--reason`,
 an explicit model/key reference and egress authorization. See the
 [own-backend walkthrough](GRAFANA_INVESTIGATION.md). Exit 0 means report produced,
 not a healthy service or complete investigation. Existing formats remain unchanged.

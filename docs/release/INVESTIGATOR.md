@@ -1,5 +1,10 @@
 # Captured-evidence investigation
 
+This page describes the preserved captured-view `--reason` mode. The additive
+[`investigate ask` workflow](GRAFANA_INVESTIGATION.md#ask-a-question) instead uses
+one planning call, deterministic conditional backend acquisition, and one final
+explanation call. It does not run this six-call inspection loop.
+
 The application library inspects one verified investigation report. It always
 computes mandatory checks for metrics, sampled operations, sampled dependencies,
 logs, traffic mix and versions. The current aggregate recipes do not acquire

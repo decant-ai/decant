@@ -1,6 +1,6 @@
 use super::*;
 #[path = "../tests/support/mod.rs"]
-mod support;
+pub(super) mod support;
 use support::{Reply, Server};
 
 fn input() -> ModelInputV1 {

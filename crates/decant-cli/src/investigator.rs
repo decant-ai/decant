@@ -88,6 +88,43 @@ fn metric_value(f: &Value, i: usize) -> Option<f64> {
         .flatten()
 }
 impl PreparedInvestigationV1 {
+    pub fn signal_direction(&self, focus: FocusV1) -> DirectionV1 {
+        match focus {
+            FocusV1::Latency => self.expected[0],
+            FocusV1::Errors => self.expected[1],
+            _ => DirectionV1::Unknown,
+        }
+    }
+    /// Bound whole projected views; retain explicit omissions and missing checks.
+    /// This exposes no raw telemetry text, selectors, origins or user question.
+    pub fn explanation_input(&self, focus: FocusV1) -> Result<ModelInputV1, E> {
+        let mut views = Vec::new();
+        let mut refs = Vec::new();
+        let mut omitted = Vec::new();
+        for c in &self.checks {
+            views.push(c.clone());
+            let candidate = serde_json::to_vec(&views).map_err(|_| E::InvalidInput)?;
+            if candidate.len() > 12 * 1024 {
+                views.pop();
+                omitted.push(c.probe);
+            } else {
+                refs.push(c.reference.clone());
+            }
+        }
+        let catalog: Vec<_> = self
+            .checks
+            .iter()
+            .map(|c| json!({"probe":c.probe,"status":c.status,"reason":c.reason}))
+            .collect();
+        let context=serde_json::to_vec(&json!({"report_id":self.report_id,"focus":focus,"window":self.window,"findings":self.findings,"checks":catalog,"views":views,"omitted_views":omitted,"qualifications":qualifications()})).map_err(|_|E::InvalidInput)?;
+        if context.len() > decant_backend::model::two_stage::EVIDENCE_BYTES {
+            return Err(E::OutputLimit);
+        }
+        ModelInputV1::from_projected(&context, refs).map_err(|_| E::InvalidInput)
+    }
+    pub fn accepts_hypotheses(&self, hypotheses: &[HypothesisV1]) -> bool {
+        self.assessments_valid(hypotheses)
+    }
     pub fn new(report: &InvestigationReportV1) -> Result<Self, E> {
         let envelope: Value = serde_json::from_slice(report.json()).map_err(|_| E::InvalidInput)?;
         let d = &envelope["document"];
@@ -602,6 +639,56 @@ impl AssessmentReportV1 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn explanation_packing_omits_whole_views_and_their_references() {
+        let id = |c: char| format!("sha256:v1:{}", c.to_string().repeat(64));
+        let prepared = PreparedInvestigationV1 {
+            report_id: id('a'),
+            window: json!({"end_seconds":1000,"window_seconds":300}),
+            findings: json!({"latency_p95_direction":"unknown"}),
+            expected: [DirectionV1::Unknown; 6],
+            checks: vec![
+                Check {
+                    probe: ProbeV1::Metrics,
+                    reference: id('b'),
+                    status: "checked",
+                    reason: "backend_estimates",
+                    facts: json!({"value":1}),
+                },
+                Check {
+                    probe: ProbeV1::Operations,
+                    reference: id('c'),
+                    status: "partial",
+                    reason: "sampled_trace_evidence",
+                    facts: json!({"observations":vec![1; 8*1024]}),
+                },
+                Check {
+                    probe: ProbeV1::Dependencies,
+                    reference: id('d'),
+                    status: "unavailable",
+                    reason: "not_scheduled",
+                    facts: Value::Null,
+                },
+            ],
+        };
+        let input = prepared.explanation_input(FocusV1::Latency).unwrap();
+        let bytes = input.projected_json().unwrap();
+        assert!(bytes.len() <= decant_backend::model::two_stage::EVIDENCE_BYTES);
+        let v: Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(v["omitted_views"], json!(["operations"]));
+        assert_eq!(v["views"].as_array().unwrap().len(), 2);
+        assert_eq!(v["checks"].as_array().unwrap().len(), 3);
+        assert_eq!(input.references(), &[id('b'), id('d')]);
+        assert!(!String::from_utf8_lossy(&bytes).contains(&id('c')));
+        assert_eq!(
+            bytes,
+            prepared
+                .explanation_input(FocusV1::Latency)
+                .unwrap()
+                .projected_json()
+                .unwrap()
+        );
+    }
     #[test]
     fn integer_duration_comparison_does_not_round_above_f64_precision() {
         assert_eq!(

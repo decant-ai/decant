@@ -35,6 +35,8 @@ external evidence explicit and never authorizes publication.
 
 ## Operations and evidence limits
 
+- Question investigations currently select a latency or selected-error recipe only. Aggregate increase or unknown evidence triggers configured trace/log reads; stable aggregates can miss localized regressions. There is no general-purpose query planner, exception-text diagnosis or unrestricted conversation. Two model calls do not establish token/cost savings. Model prose remains unverified interpretation despite reference and scalar checks.
+
 - Grafana investigation requires explicit counter/classic-histogram mappings and confirmed scope. Tempo is sampled first-N evidence; Loki is selected log counts, not request-error rates. Traffic-mix and version-comparison checks remain unavailable. Native histograms and arbitrary-schema inference are not supported.
 - Follow-ups inspect a saved capture. Refresh is explicit and preserves the prior bundle. Local Unix storage is cooperative and quota-limited, not a hostile same-account or universal power-loss guarantee. Synthetic TLS tests do not prove actual backend/provider compatibility or independent-user activation.
 

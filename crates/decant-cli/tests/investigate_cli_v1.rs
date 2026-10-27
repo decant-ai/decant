@@ -145,6 +145,79 @@ fn id(v: &Value) -> &str {
     v["bundle_id"].as_str().unwrap()
 }
 #[test]
+fn ask_question_bounds_consent_and_credentials_precede_backend_calls() {
+    let case = Case::new(vec![]);
+    case.configure();
+    let base = [
+        "investigate",
+        "ask",
+        "--question",
+        "Why is checkout slower?",
+        "--model",
+        "synthetic-model",
+        "--model-key-env",
+        "SYNTHETIC_UNSET_MODEL_KEY",
+    ];
+    let denied = run(&case.dir.0, &base, "", true);
+    assert_eq!(denied.status.code(), Some(1));
+    assert!(denied.stderr == b"error: investigation failed (model_egress_confirmation_required)\n");
+    let mut permitted = base.to_vec();
+    permitted.push("--allow-model-egress");
+    let missing = run(&case.dir.0, &permitted, "", true);
+    assert_eq!(missing.status.code(), Some(1));
+    assert!(missing.stdout.is_empty());
+    assert!(missing.stderr == b"error: investigation failed (credential_unavailable)\n");
+    for q in [
+        "".to_owned(),
+        "SYNTHETIC_QUESTION_SECRET".repeat(60),
+        "SYNTHETIC_QUESTION_SECRET\n".to_owned(),
+    ] {
+        let out = run(
+            &case.dir.0,
+            &["investigate", "ask", "--question", &q],
+            "",
+            false,
+        );
+        assert_eq!(out.status.code(), Some(2));
+        assert!(out.stdout.is_empty());
+        assert!(out.stderr == b"error: investigation failed (invalid_usage)\n");
+    }
+    let ambiguous = run(
+        &case.dir.0,
+        &[
+            "investigate",
+            "ask",
+            "--question",
+            "Why slower?",
+            "--focus",
+            "errors",
+        ],
+        "",
+        false,
+    );
+    assert_eq!(ambiguous.status.code(), Some(2));
+    let id = format!("sha256:v1:{}", "a".repeat(64));
+    let stale = run(
+        &case.dir.0,
+        &[
+            "investigate",
+            "ask",
+            "--question",
+            "Why slower?",
+            "--bundle",
+            &id,
+        ],
+        "",
+        false,
+    );
+    assert_eq!(stale.status.code(), Some(2)); // Explicit cached time cut is mandatory.
+    assert_eq!(case.server.requests.lock().unwrap().len(), 1); // Connect discovery only.
+    let help = run(&case.dir.0, &["investigate", "ask", "--help"], "", false);
+    assert!(help.status.success());
+    assert!(String::from_utf8_lossy(&help.stdout).contains("At most two model calls"));
+    assert!(String::from_utf8_lossy(&help.stdout).contains("confirmed service/environment names"));
+}
+#[test]
 fn guided_setup_and_scoped_acquisition_without_json_editing() {
     let case = Case::new(metrics());
     let setup = run(

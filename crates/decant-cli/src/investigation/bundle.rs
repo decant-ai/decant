@@ -103,6 +103,13 @@ impl ReplayBundleV1 {
     /// The caller must supply the independently retained expected bundle ID.
     /// Verification does not authenticate the original backend or trust anchor.
     pub fn decode(bytes: &[u8], expected_id: &str) -> Result<Self, E> {
+        Ok(Self::restore(bytes, expected_id)?.1)
+    }
+    /// Re-verify before reusing any recorded response; never consult the network.
+    pub fn captured(&self) -> Result<CapturedInvestigationV1, E> {
+        Ok(Self::restore(&self.bytes, &self.id)?.0)
+    }
+    fn restore(bytes: &[u8], expected_id: &str) -> Result<(CapturedInvestigationV1, Self), E> {
         if bytes.len() > MAX_BUNDLE || bytes.len() < MAGIC.len() + 4 || !bytes.starts_with(MAGIC) {
             return Err(E::InvalidBundle);
         }
@@ -198,6 +205,6 @@ impl ReplayBundleV1 {
         if rebuilt.report.id() != manifest.report_id || rebuilt.bytes != bytes {
             return Err(E::IdentityMismatch);
         }
-        Ok(rebuilt)
+        Ok((captured, rebuilt))
     }
 }

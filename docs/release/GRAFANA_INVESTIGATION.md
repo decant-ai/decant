@@ -55,7 +55,69 @@ Noninteractive setup is available with `--yes` and all required mapping flags;
 run `investigate configure --help`. Optional sources default off with `--yes`
 unless selected explicitly. No JSON hand-editing is required.
 
-## Read the result
+## Ask a question
+
+After configuring the profile, use the additive question workflow:
+
+```sh
+decant investigate ask --profile production --question "Why is checkout slower?" --model YOUR_MODEL_ID --model-key-env ANTHROPIC_API_KEY --allow-model-egress
+```
+
+Use your chosen model ID, not the placeholder. `ask` needs no `--reason` flag.
+The confirmed profile and `--since`/`--until` determine scope and time; a question
+cannot override them. Review the confirmed scope printed in the answer. Without
+`--allow-model-egress`, an interactive terminal must confirm; scripts fail before
+model/backend calls. Your question (at most 1024 UTF-8 bytes, no controls) and the
+confirmed service/environment names (at most 128 UTF-8 bytes each) are sent to
+Anthropic in the planning call. Do not include credentials or sensitive details,
+including in shell history. The question is not copied to reports, bundles or diagnostics.
+No other profile fields are sent: label names, backend addresses, datasource IDs,
+credential references and paths remain excluded. The planner is instructed to
+request clarification for a conflicting service/environment, but model interpretation
+is fallible. Local queries always use the confirmed profile, never a model-selected
+scope. The final explanation call does not receive those names or the question.
+
+There is one planning call and at most one explanation call, never an intermediate
+model call or automatic retry. The planner selects latency or selected-error
+regression, or declines/requests clarification without querying the backend.
+The deterministic middle obtains the configured metrics. An observed increase or
+unknown comparison schedules configured Tempo/Loki recipes. Otherwise those reads
+are visibly skipped; that is not proof of health or absence of a localized problem.
+Matching trace/log evidence already in the selected bundle is still inspected,
+even when there is no aggregate increase; skipping applies only to new reads.
+No new sources, arbitrary queries, scope expansion, traffic-mix or version checks
+are introduced. Tempo is sampled evidence; Loki counts do not explain log contents.
+
+The new `decant-investigation-answer` V1 JSON (`--format json`) records the recipe,
+branch decisions, qualified facts, omissions, evidence identities, token/cache
+usage and separately labelled model explanation. Reference checks and direct
+scalar checks do not verify the truth of model prose. Markdown escapes that prose;
+no commands or links from it are executed. Full evidence remains accessible via
+`investigate report --bundle ID`. No model answer is needed to replay the facts.
+
+Metrics are saved before additional reads; each expanded cut is saved before
+continuing, and the final cut before explanation. Receipts are printed to stderr.
+Failure/cancellation after publication does not remove earlier cuts. Stores remain
+quota-limited; up to three immutable bundles may be published, with no pruning.
+Final model failure returns evidence with exit 1. Unsupported/clarification results
+also exit 1, without a new bundle. Exit 0 means answer produced, not diagnosis proved.
+
+To explicitly reuse existing evidence, supply `--bundle ID --until EPOCH_SECONDS`
+and a matching `--since`. The origin, scope, metric mapping, interval and any reused
+trace/log policy must match. Existing responses, including failures, are not
+retried. Missing selected sections may be acquired for that same interval; those
+responses are not an atomic snapshot with the old ones. The old bundle remains
+unchanged. To obtain a fresh interval, omit `--bundle` and run a new investigation.
+
+Limits remain 32 backend requests and five minutes overall. Reserve 128 KiB of
+the 64-MiB response allowance for the two model responses (64 KiB each). Planning
+HTTP bodies are capped at 8 KiB/512 requested output tokens; explanation bodies at
+24 KiB/2048 requested output tokens. The evidence projection is at most 16 KiB,
+with whole-view omissions explicit. These byte/call bounds do not prove lower
+tokens, cost or equal diagnostic usefulness. Actual provider compatibility and
+comparative results remain unverified by the synthetic tests.
+
+## Read the deterministic result
 
 The default Markdown includes before/after metrics, observed directions, all six
 mandatory checks, missing checks, qualifications and evidence identities. Exact

@@ -4,7 +4,10 @@ use decant_backend::{
     grafana::{GrafanaV1, ProfileV1, identifier, label},
     loki::{LogPolicyV1, LokiRecipeV1},
     metrics::MetricsRecipeV1,
-    model::AnthropicV1,
+    model::{
+        AnthropicV1,
+        two_stage::{RESPONSE_ALLOWANCE, TwoStageAnthropicV1, validate_question},
+    },
     tempo::{TempoRecipeV1, TracePolicyV1, WindowV1},
     transport::{MAX_TOTAL_BYTES, UsageV1},
 };
@@ -288,10 +291,9 @@ fn parse(args: impl Iterator<Item = OsString>) -> Result<(String, Options, bool)
         }
         items.push(s);
     }
-    let mode = if items
-        .first()
-        .is_some_and(|s| ["configure", "follow-up", "refresh", "report"].contains(&s.as_str()))
-    {
+    let mode = if items.first().is_some_and(|s| {
+        ["configure", "follow-up", "refresh", "report", "ask"].contains(&s.as_str())
+    }) {
         items.remove(0)
     } else {
         "run".into()
@@ -334,7 +336,8 @@ fn parse(args: impl Iterator<Item = OsString>) -> Result<(String, Options, bool)
         } else {
             run.contains(&key.as_str())
                 || (!follow && (common.contains(&key.as_str()) || fresh.contains(&key.as_str())))
-                || ((follow || mode == "refresh") && key == "--bundle")
+                || ((follow || mode == "refresh" || mode == "ask") && key == "--bundle")
+                || (mode == "ask" && key == "--question")
         };
         if !allowed {
             return Err(Failure::Usage);
@@ -355,6 +358,7 @@ struct Reason {
     key_env: String,
 }
 struct Job {
+    question: Option<String>,
     mode: String,
     store: PathBuf,
     bundle: Option<String>,
@@ -364,6 +368,19 @@ struct Job {
     reason: Option<Reason>,
 }
 fn prepare(mode: String, o: Options) -> Result<Job, Failure> {
+    let question = if mode == "ask" {
+        if o.contains_key("--focus")
+            || o.contains_key("--reason")
+            || (o.contains_key("--bundle") && !o.contains_key("--until"))
+        {
+            return Err(Failure::Usage);
+        }
+        let q = required(&o, "--question")?;
+        validate_question(q).map_err(|_| Failure::Usage)?;
+        Some(q.to_owned())
+    } else {
+        None
+    };
     let focus = match get(&o, "--focus", "overview") {
         "overview" => FocusV1::Overview,
         "latency" => FocusV1::Latency,
@@ -377,7 +394,11 @@ fn prepare(mode: String, o: Options) -> Result<Job, Failure> {
         "json" => true,
         _ => return Err(Failure::Usage),
     };
-    let bundle = if mode == "follow-up" || mode == "refresh" || mode == "report" {
+    let bundle = if mode == "follow-up"
+        || mode == "refresh"
+        || mode == "report"
+        || (mode == "ask" && o.contains_key("--bundle"))
+    {
         let id = required(&o, "--bundle")?;
         if !decant_backend::model::identity(id) {
             return Err(Failure::Configuration);
@@ -421,7 +442,7 @@ fn prepare(mode: String, o: Options) -> Result<Job, Failure> {
         };
         Some(setup.config(profile, end, minutes * 60)?)
     };
-    let reason = if o.contains_key("--reason") {
+    let reason = if o.contains_key("--reason") || mode == "ask" {
         let model = required(&o, "--model")?;
         let key_env = required(&o, "--model-key-env")?;
         if model.is_empty()
@@ -433,7 +454,17 @@ fn prepare(mode: String, o: Options) -> Result<Job, Failure> {
         {
             return Err(Failure::Configuration);
         }
-        if !o.contains_key("--allow-model-egress")&&(!io::stdin().is_terminal()||grafana::prompt("Send projected numeric evidence to Anthropic (up to six billable calls)? Type yes").map_err(|_|Failure::Confirmation)?!="yes") {return Err(Failure::Confirmation);}
+        let prompt = if mode == "ask" {
+            "Send your question, confirmed service/environment names, and projected numeric evidence to Anthropic (at most two billable calls)? Do not include secrets. Type yes"
+        } else {
+            "Send projected numeric evidence to Anthropic (up to six billable calls)? Type yes"
+        };
+        if !o.contains_key("--allow-model-egress")
+            && (!io::stdin().is_terminal()
+                || grafana::prompt(prompt).map_err(|_| Failure::Confirmation)? != "yes")
+        {
+            return Err(Failure::Confirmation);
+        }
         Some(Reason {
             model: model.into(),
             key_env: key_env.into(),
@@ -448,6 +479,7 @@ fn prepare(mode: String, o: Options) -> Result<Job, Failure> {
         None
     };
     Ok(Job {
+        question,
         mode,
         store: PathBuf::from(get(&o, "--store-dir", ".decant/investigations")),
         bundle,
@@ -458,6 +490,9 @@ fn prepare(mode: String, o: Options) -> Result<Job, Failure> {
     })
 }
 async fn execute(job: Job) -> Result<(Vec<u8>, u8), Failure> {
+    if job.mode == "ask" {
+        return execute_ask(job).await;
+    }
     let started = Instant::now();
     let deadline = started + Duration::from_secs(300);
     grafana::directory(&job.store, true).map_err(|_| Failure::Io)?;
@@ -575,6 +610,60 @@ async fn execute(job: Job) -> Result<(Vec<u8>, u8), Failure> {
     }
     Ok((bytes, status))
 }
+async fn execute_ask(job: Job) -> Result<(Vec<u8>, u8), Failure> {
+    let deadline = Instant::now() + Duration::from_secs(300);
+    let config = job.config.ok_or(Failure::Configuration)?;
+    grafana::directory(&job.store, true).map_err(|_| Failure::Io)?;
+    let mut store = BundleStoreV1::open(&job.store)?;
+    let seed = job
+        .bundle
+        .as_ref()
+        .map(|id| store.get(id).and_then(|b| b.captured()))
+        .transpose()?;
+    if let Some(s) = &seed {
+        decant_cli::investigation::adaptive::validate_seed(&config, s)?;
+    }
+    let reason = job.reason.ok_or(Failure::Configuration)?;
+    let model_key = grafana::token(&reason.key_env).map_err(|_| Failure::Credentials)?;
+    let mut provider = TwoStageAnthropicV1::new(
+        &reason.model,
+        &model_key,
+        deadline.saturating_duration_since(Instant::now()),
+    )
+    .map_err(|_| Failure::Configuration)?;
+    drop(model_key);
+    let key = grafana::token(&config.profile.token_env).map_err(|_| Failure::Credentials)?;
+    let ca = grafana::read_ca(config.profile.ca_file.as_deref()).map_err(|_| Failure::Io)?;
+    let mut backend = GrafanaV1::new(config.profile.clone(), &key, ca.as_deref())
+        .and_then(|b| b.with_response_allowance(MAX_TOTAL_BYTES - RESPONSE_ALLOWANCE))
+        .map_err(|_| Failure::Configuration)?;
+    drop(key);
+    let answer = decant_cli::question::investigate(
+        decant_cli::question::QuestionRequestV1 {
+            question: job.question.as_deref().ok_or(Failure::Usage)?,
+            config,
+            seed,
+            remaining: deadline.saturating_duration_since(Instant::now()),
+        },
+        &mut backend,
+        &mut provider,
+        |b| {
+            store.put(b)?;
+            writeln!(io::stderr().lock(), "evidence saved: {}", b.id())
+                .map_err(|_| InvestigationErrorV1::StoreUnavailable)?;
+            Ok(())
+        },
+    )
+    .await?;
+    Ok((
+        if job.json {
+            answer.json().to_vec()
+        } else {
+            answer.markdown().as_bytes().to_vec()
+        },
+        if answer.completed() { 0 } else { 1 },
+    ))
+}
 pub fn run(args: impl Iterator<Item = OsString>) -> ExitCode {
     let result = (|| {
         let (mode, o, help) = parse(args)?;
@@ -584,6 +673,7 @@ pub fn run(args: impl Iterator<Item = OsString>) -> ExitCode {
                 .write_all(HELP.as_bytes())
                 .map_err(|_| Failure::Io)?;
             io::stdout().lock().write_all(b"\n  decant investigate report --bundle <ID> [--format markdown|json] [--store-dir <PATH>]\nRecompute, verify and render the original evidence report offline.\n").map_err(|_| Failure::Io)?;
+            io::stdout().lock().write_all(b"\n  decant investigate ask --question <TEXT> --profile <NAME> --model <MODEL>\n    --model-key-env <NAME> --allow-model-egress [--since 15m] [--until <SECONDS>]\nAt most two model calls: plan, deterministic conditional acquisition, explain.\nSends the question, confirmed service/environment names, and numeric evidence.\nNever include secrets in the question.\nOptional --bundle <ID> reuses compatible evidence; requires explicit --until\nand matching --since. No automatic refresh. Latency/error recipes only.\n").map_err(|_|Failure::Io)?;
             return Ok(0);
         }
         if mode == "configure" {
