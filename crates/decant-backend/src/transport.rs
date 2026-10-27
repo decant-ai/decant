@@ -208,6 +208,15 @@ impl HttpSessionV1 {
         self.usage
     }
 
+    pub(crate) fn restrict_bytes(&mut self, bytes: usize) -> Result<(), BackendErrorV1> {
+        if self.usage.attempts != 0 || bytes == 0 || bytes > self.limits.total_bytes {
+            return Err(BackendErrorV1::InvalidConfiguration);
+        }
+        self.limits.total_bytes = bytes;
+        self.limits.response_bytes = self.limits.response_bytes.min(bytes);
+        Ok(())
+    }
+
     pub(crate) fn model(
         base: &str,
         key: &str,

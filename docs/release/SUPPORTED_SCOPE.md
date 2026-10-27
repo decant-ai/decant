@@ -57,3 +57,8 @@ standalone investigation command or model reasoning. See
 
 The optional model adapter is a separate library boundary, not an automatic
 agent or new CLI command. See [model access and limits](MODEL_ACCESS.md).
+
+The application library also provides a bounded optional reasoning loop over
+captured evidence, with model-independent findings and explicit unsupported
+checks. See [investigator semantics](INVESTIGATOR.md). This library addition does
+not itself add a command or claim live-provider compatibility.

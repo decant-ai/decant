@@ -162,6 +162,12 @@ impl fmt::Debug for ModelInputV1 {
     }
 }
 impl ModelInputV1 {
+    pub fn projected_json(&self) -> Result<Vec<u8>, ModelErrorV1> {
+        serde_json::to_vec(&self.context).map_err(|_| ModelErrorV1::InvalidInput)
+    }
+    pub fn references(&self) -> &[String] {
+        &self.references
+    }
     pub fn from_projected(context: &[u8], references: Vec<String>) -> Result<Self, ModelErrorV1> {
         if references.len() > 32
             || references.iter().any(|s| !identity(s))
@@ -199,6 +205,13 @@ impl fmt::Debug for AnthropicV1 {
     }
 }
 impl AnthropicV1 {
+    /// Downward-only allowance before the first call; shares the acquisition budget.
+    pub fn with_response_allowance(mut self, bytes: usize) -> Result<Self, ModelErrorV1> {
+        self.http
+            .restrict_bytes(bytes.min(384 * 1024))
+            .map_err(|_| ModelErrorV1::InvalidInput)?;
+        Ok(self)
+    }
     pub fn new(model: &str, key: &str, remaining: Duration) -> Result<Self, ModelErrorV1> {
         Self::at("https://api.anthropic.com", model, key, None, remaining)
     }

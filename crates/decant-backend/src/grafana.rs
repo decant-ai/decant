@@ -183,6 +183,9 @@ pub struct GrafanaV1 {
     pub(crate) http: HttpSessionV1,
 }
 impl GrafanaV1 {
+    pub fn usage(&self) -> crate::transport::UsageV1 {
+        self.http.usage()
+    }
     pub fn new(profile: ProfileV1, bearer: &str, ca: Option<&[u8]>) -> Result<Self, E> {
         profile.validate()?;
         let http = HttpSessionV1::new(&profile.url, bearer, ca, LimitsV1::default())?;

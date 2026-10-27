@@ -186,6 +186,24 @@ fn model_closed_output_ref_and_assessment_validation() {
     text["content"] = json!([{"type":"text","text":"unverified arbitrary output"}]);
     assert!(decode(&text, &[]).is_err());
 }
+
+#[tokio::test]
+async fn model_response_allowance_is_downward_only_and_pre_call() {
+    let server = Server::new(vec![Reply::json(200, &message(inspect()).to_string())]);
+    let mut m = model(&server, Duration::from_secs(5))
+        .with_response_allowance(1)
+        .unwrap();
+    assert!(matches!(
+        m.decide(&input()).await,
+        Err(ModelErrorV1::BudgetExhausted)
+    ));
+    assert!(m.with_response_allowance(384 * 1024).is_err());
+    assert!(
+        model(&server, Duration::from_secs(5))
+            .with_response_allowance(0)
+            .is_err()
+    );
+}
 #[tokio::test]
 async fn model_duplicate_fields_rejected_and_limits_precede_network() {
     let body = message(inspect()).to_string().replacen(
