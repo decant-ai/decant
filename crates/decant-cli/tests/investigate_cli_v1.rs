@@ -562,16 +562,21 @@ fn subcommand_help_is_offline_and_explicit() {
 #[cfg(unix)]
 #[test]
 fn interrupt_cancels_network_and_store_can_be_reopened() {
+    use std::sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    };
     use std::time::{Duration, Instant};
     let mut first = Reply::query_json(
         r#"{"status":"success","data":{"resultType":"vector","result":[{"metric":{},"value":["__TIME__","1"]}]}}"#,
     );
-    first.delay_body = Duration::from_millis(700);
+    let body_gate = Arc::new(AtomicBool::new(false));
+    first.body_gate = Some(body_gate.clone());
     let mut replies = vec![first];
     replies.extend(metrics());
     let case = Case::new(replies);
     case.configure();
-    let child = Command::new(env!("CARGO_BIN_EXE_decant"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_decant"))
         .args(["investigate", "--since", "5m", "--until", "1000"])
         .current_dir(&case.dir.0)
         .env("SYNTHETIC_GRAFANA_TOKEN", "SYNTHETIC_SECRET_TOKEN")
@@ -591,11 +596,22 @@ fn interrupt_cancels_network_and_store_can_be_reopened() {
             .unwrap()
             .success()
     );
+    let until = Instant::now() + Duration::from_secs(5);
+    while child.try_wait().unwrap().is_none() && Instant::now() < until {
+        std::thread::sleep(Duration::from_millis(5));
+    }
+    if child.try_wait().unwrap().is_none() {
+        child.kill().unwrap();
+        child.wait().unwrap();
+        body_gate.store(true, Ordering::Release);
+        panic!("interrupted CLI did not exit within the test deadline");
+    }
     let out = child.wait_with_output().unwrap();
     assert_eq!(out.status.code(), Some(130));
     assert!(out.stdout.is_empty());
     assert!(String::from_utf8_lossy(&out.stderr).contains("cancelled"));
     assert!(case.bundles().is_empty());
+    body_gate.store(true, Ordering::Release);
     let resumed = case.investigate(&[]);
     assert!(resumed.status.success());
     assert_eq!(case.bundles().len(), 1);
