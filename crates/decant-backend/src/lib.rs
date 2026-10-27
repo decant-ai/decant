@@ -7,5 +7,6 @@ pub use evidence::{ArtifactDomainV1, ReadV1, artifact_hash_v1};
 pub mod grafana;
 pub mod loki;
 pub mod metrics;
+pub mod model;
 pub mod tempo;
 pub mod transport;

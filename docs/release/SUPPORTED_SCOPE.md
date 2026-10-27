@@ -30,7 +30,7 @@
 - One process, one statically configured source, one configured view, and one checkpoint writer.
 - Finite invocations or one supervised resident service; the service does not daemonize or restart itself.
 - Local stdout output for finite commands; MCP protocol-only stdout and value-safe lifecycle stderr for the resident service; local checkpoint files.
-- No external model call or hosted Decant service.
+- No hosted Decant service. The optional model library makes explicitly authorized external calls; deterministic commands do not require a model.
 - Backend network access is opt-in through Kafka or Grafana commands; build/test downloads are separate explicit operations.
 - No automatic usage telemetry. One source per report/runtime; no cross-source join or consistent multi-source snapshot.
 
@@ -54,3 +54,6 @@ The application library can compose these captures into versioned JSON/Markdown
 investigation documents and private offline replay bundles. It does not add a
 standalone investigation command or model reasoning. See
 [investigation and replay limits](INVESTIGATION_REPLAY.md).
+
+The optional model adapter is a separate library boundary, not an automatic
+agent or new CLI command. See [model access and limits](MODEL_ACCESS.md).
