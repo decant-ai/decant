@@ -109,6 +109,7 @@ pub struct Reply {
     pub query_time: bool,
     pub delay_headers: Duration,
     pub delay_body: Duration,
+    pub body_gate: Option<Arc<AtomicBool>>,
 }
 impl Reply {
     pub fn query_json(body: &str) -> Self {
@@ -125,7 +126,29 @@ impl Reply {
             query_time: false,
             delay_headers: Duration::ZERO,
             delay_body: Duration::ZERO,
+            body_gate: None,
         }
+    }
+
+    fn for_request(&self, request: &str) -> Self {
+        let mut reply = self.clone();
+        if self.query_time {
+            let time = request
+                .split("time=")
+                .nth(1)
+                .unwrap()
+                .split(['&', ' '])
+                .next()
+                .unwrap();
+            let raw = String::from_utf8_lossy(&self.bytes);
+            let body = raw
+                .split("\r\n\r\n")
+                .nth(1)
+                .unwrap()
+                .replace("\"__TIME__\"", time);
+            reply.bytes = Self::json(200, &body).bytes;
+        }
+        reply
     }
 }
 pub struct Server {
@@ -199,27 +222,7 @@ impl Server {
                 let Some(reply) = replies.get(index) else {
                     continue;
                 };
-                let adjusted;
-                let reply = if reply.query_time {
-                    let request = String::from_utf8_lossy(&request);
-                    let time = request
-                        .split("time=")
-                        .nth(1)
-                        .unwrap()
-                        .split(['&', ' '])
-                        .next()
-                        .unwrap();
-                    let raw = String::from_utf8_lossy(&reply.bytes);
-                    let body = raw
-                        .split("\r\n\r\n")
-                        .nth(1)
-                        .unwrap()
-                        .replace("\"__TIME__\"", time);
-                    adjusted = Reply::json(200, &body);
-                    &adjusted
-                } else {
-                    reply
-                };
+                let reply = reply.for_request(&String::from_utf8_lossy(&request));
                 index += 1;
                 thread::sleep(reply.delay_headers);
                 if let Some(split) = reply
@@ -231,6 +234,17 @@ impl Server {
                     let _ = tls.write_all(&reply.bytes[..split]);
                     let _ = tls.flush();
                     thread::sleep(reply.delay_body);
+                    if let Some(gate) = &reply.body_gate {
+                        while !gate.load(Ordering::Acquire)
+                            && !stopped.load(Ordering::Relaxed)
+                            && Instant::now() < end
+                        {
+                            thread::sleep(Duration::from_millis(2));
+                        }
+                        if !gate.load(Ordering::Acquire) {
+                            break;
+                        }
+                    }
                     let _ = tls.write_all(&reply.bytes[split..]);
                 } else {
                     let _ = tls.write_all(&reply.bytes);
@@ -246,6 +260,20 @@ impl Server {
             thread: Some(handle),
         }
     }
+}
+
+#[test]
+fn query_time_substitution_preserves_fault_controls() {
+    let gate = Arc::new(AtomicBool::new(false));
+    let mut reply = Reply::query_json(r#"{"time":"__TIME__"}"#);
+    reply.delay_headers = Duration::from_millis(12);
+    reply.delay_body = Duration::from_millis(34);
+    reply.body_gate = Some(gate.clone());
+    let adjusted = reply.for_request("GET /query?time=1000 HTTP/1.1\r\n\r\n");
+    assert_eq!(adjusted.delay_headers, reply.delay_headers);
+    assert_eq!(adjusted.delay_body, reply.delay_body);
+    assert!(Arc::ptr_eq(adjusted.body_gate.as_ref().unwrap(), &gate));
+    assert_eq!(adjusted.bytes, Reply::json(200, r#"{"time":1000}"#).bytes);
 }
 impl Drop for Server {
     fn drop(&mut self) {

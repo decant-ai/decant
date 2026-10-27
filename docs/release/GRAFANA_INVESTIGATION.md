@@ -13,12 +13,12 @@ Synthetic tests do not certify your deployment or a particular provider model.
 
 ## Build and connect
 
-Follow the [build prerequisites](../../CONTRIBUTING.md#development-workflow).
+Follow the [investigation-only build prerequisites](INVESTIGATION_BINARY.md).
 From the repository root:
 
 ```sh
 cargo fetch --locked
-cargo build --release --locked --offline -p decant-cli --bin decant
+cargo build --release --locked --offline -p decant-cli --bin decant --no-default-features
 ```
 
 Provide a Grafana token through your normal secure environment mechanism. Do not

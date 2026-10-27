@@ -1,5 +1,10 @@
 # Known Limitations for 0.1.0-alpha.1
 
+Investigation-only builds and unsigned candidate checks are available, but they
+do not establish independent own-backend activation, a head-to-head result or
+signed distribution. The [beta assessment](INVESTIGATION_BETA.md) keeps missing
+external evidence explicit and never authorizes publication.
+
 ## Runtime and source limits
 
 - Kafka supports static assignment with trusted plaintext, verified TLS, or TLS plus SCRAM-SHA-256/512. It does not support consumer groups, dynamic partition discovery/rebalancing, broker commits, OAuth, Kerberos, or arbitrary native client properties.

@@ -1,9 +1,11 @@
 //! Process control only. No clocks or signals enter deterministic state.
+#[cfg(feature = "full")]
 use std::{
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
 
+#[cfg(feature = "full")]
 pub(crate) const SHUTDOWN_DEADLINE: Duration = Duration::from_secs(30);
 
 // A Tokio Stdout blocking writer can hold Rust's global stdout lock forever
@@ -53,6 +55,7 @@ impl Shutdown {
     }
 }
 
+#[cfg(feature = "full")]
 pub(crate) fn join<T>(worker: JoinHandle<T>, deadline: Duration) -> Result<T, ()> {
     let started = Instant::now();
     while !worker.is_finished() {
@@ -64,7 +67,7 @@ pub(crate) fn join<T>(worker: JoinHandle<T>, deadline: Duration) -> Result<T, ()
     worker.join().map_err(|_| ())
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "full"))]
 mod tests {
     use super::*;
     #[test]

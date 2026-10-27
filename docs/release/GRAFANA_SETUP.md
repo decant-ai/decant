@@ -20,7 +20,9 @@ workflow first. Use a read-only Grafana service-account token with access to the
 selected datasources. Decant needs datasource discovery and datasource-query
 permissions. Do not pass a token as a command argument or put it in a profile.
 No Decant account, model provider or Kafka cluster is needed for these commands.
-The source build still includes Kafka's native prerequisites.
+The default full source build includes Kafka's native prerequisites. For Grafana
+only, use `--no-default-features`; see the
+[investigation-only build guide](INVESTIGATION_BINARY.md).
 
 Connect lists supported datasource UIDs, asks for your choices, and asks for
 service/environment labels and values. Confirm the proposed scope before saving.

@@ -16,7 +16,15 @@ promise or a demonstrated reduction in your agent bill.
 
 ## See what you get
 
-Already have Grafana? After [building](#build-and-run-the-demo), connect with an
+Already have Grafana? Build without Kafka prerequisites:
+
+```sh
+cargo fetch --locked
+cargo build --release --locked --offline -p decant-cli --bin decant --no-default-features
+```
+
+Use Rust 1.98.0 and the platform TLS build prerequisites in the
+[investigation-only build guide](docs/release/INVESTIGATION_BINARY.md). Then connect with an
 environment-referenced token and follow the prompts—no telemetry export or JSON
 hand-editing is needed:
 
@@ -74,7 +82,8 @@ cargo build --release --locked --offline -p decant-cli --bin decant
 
 The source build requires a C/C++ compiler, make, Perl and the platform's
 Kafka/zlib development prerequisites; see [build prerequisites](CONTRIBUTING.md#development-workflow).
-The CLI currently builds its Kafka support even for file-only use. Fetching
+This default full build includes Kafka even for file-only use. The investigation-only
+build above omits file, streaming and MCP commands and their build dependencies. Fetching
 dependencies needs network access. Running the demo or analyzing a local file
 does not need a Kafka cluster, model account, Docker or network connection.
 
