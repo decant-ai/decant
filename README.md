@@ -1,20 +1,36 @@
 # Decant
 
-Turn traces into compact, reproducible evidence for your AI debugging agent.
+Investigate service latency and error changes with reproducible evidence and explicit gaps.
 
 **“Checkout got slower. What changed, and what evidence do we have?”**
 
-Decant compares observed service behavior across two time windows and produces
-a bounded report: span counts, error fractions, p95 duration, permitted version
-observations, supporting references and explicit gaps. Read it locally or let
-your existing agent read it through MCP. Compilation runs locally, without an
-LLM, model account or Decant service.
+Decant reads your existing Grafana metrics and optional Tempo/Loki data, compares
+two time windows, and produces a bounded report: observed changes, measurements,
+supporting evidence and missing checks. Read it locally; optionally authorize
+bounded model reasoning. Evidence calculation and replay work without an LLM.
+Completed OTel trace captures and compatible Kafka streams remain supported.
 
 **Source alpha (`0.1.0-alpha.1`).** Build from source; signed downloads are not
 available. This is an experimental investigation tool, not a production support
 promise or a demonstrated reduction in your agent bill.
 
 ## See what you get
+
+Already have Grafana? After [building](#build-and-run-the-demo), connect with an
+environment-referenced token and follow the prompts—no telemetry export or JSON
+hand-editing is needed:
+
+```sh
+./target/release/decant connect grafana --url https://grafana.example.com --token-env GRAFANA_TOKEN --profile production
+./target/release/decant investigate configure --profile production
+./target/release/decant investigate --profile production --since 15m
+```
+
+Use your authorized instance and explicit metric mappings. The
+[own-backend walkthrough](docs/release/GRAFANA_INVESTIGATION.md) covers permissions,
+reading the result, optional model access, offline follow-ups and refresh.
+This workflow requires a request counter and classic latency histogram in seconds;
+missing or incompatible data remains a gap, not a healthy verdict.
 
 The bundled **synthetic** example produces these facts for `checkout`:
 
@@ -36,18 +52,15 @@ for its gaps, report identity and selected evidence references.
 | --- | --- |
 | A completed, uncompressed OTLP **trace JSONL** capture | Analyze locally → JSON/Markdown → optional report-backed MCP |
 | Kafka records with the required span fields in explicitly mapped flat JSON | Publish the same evidence recipe at verified checkpoint cuts → local MCP |
-| Grafana with Prometheus/Mimir and optional Tempo/Loki | [Connect and check scoped query access](docs/release/GRAFANA_SETUP.md); not an incident diagnosis or trace-report command |
+| Grafana with Prometheus/Mimir and optional Tempo/Loki | [Guided read-only investigation](docs/release/GRAFANA_INVESTIGATION.md) → measurements/gaps → optional bounded reasoning and offline replay |
 | Traces only inside Datadog, Jaeger or another backend | No direct connector; a backend's arbitrary JSON export is not automatically compatible |
 
-There is no live OTLP receiver, logs recipe, general investigation CLI, arbitrary-JSON inference or
-agent-traffic proxy. You do not have to change an application's instrumentation
-if you already have a compatible capture, but obtaining that capture is a real
-setup step. Decant complements your backend and investigation agent; it replaces
-neither. Grafana setup and query-access diagnostics are available as a separate,
-read-only workflow; they do not turn backend responses into a trace capture.
-The internal backend library also provides bounded
-[metrics comparison recipes](docs/release/METRICS_SEMANTICS.md), not a standalone
-CLI investigation command.
+There is no live OTLP receiver, arbitrary-JSON inference, remediation or
+agent-traffic proxy. Decant does not replace your telemetry backend. Grafana
+investigation uses explicit mappings and fixed queries; it does not fabricate
+spans from aggregates. Traffic-mix and version-comparison checks remain unavailable
+on that path. For file analysis, obtaining a compatible capture is still a real
+setup step. No claim of broad incident coverage or a comparative agent win is made.
 
 ## Build and run the demo
 

@@ -2,8 +2,10 @@
 
 The internal application library composes captured Prometheus, Tempo and Loki
 evidence into `decant-investigation` version 1. This is an evidence-only report,
-not an LLM diagnosis. These APIs are not a stable Rust SDK and are not exposed
-as a new CLI command. Existing `evidence` commands/formats are unchanged.
+not an LLM diagnosis. These APIs are not a stable Rust SDK. The
+[investigation CLI](GRAFANA_INVESTIGATION.md) acquires these bundles and renders
+the original report with `investigate report --bundle ID`. Existing `evidence`
+commands/formats are unchanged; optional model interpretations are a separate sidecar.
 
 One configured Grafana profile and frozen comparison window bind all recipes.
 Acquisition uses a single bounded session; at most 26 requests are planned.

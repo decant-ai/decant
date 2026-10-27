@@ -5,6 +5,19 @@ for the new evidence workflow and per-subcommand help for exact arguments.
 
 ## Grafana setup and query diagnostics
 
+For the read-only investigation workflow:
+
+- `decant investigate configure --profile production`: guided explicit metric and optional trace/log mappings.
+- `decant investigate --profile production --since 15m`: acquire, save and compare evidence; Markdown by default.
+- `decant investigate follow-up --bundle ID --focus errors`: inspect the same evidence offline.
+- `decant investigate report --bundle ID --format json`: verify/recompute the original evidence report offline.
+- `decant investigate refresh --bundle ID --profile production`: acquire a new later cut without replacing the old one.
+
+Run `decant investigate --help` for exact options. Model use requires `--reason`,
+an explicit model/key reference and egress authorization. See the
+[own-backend walkthrough](GRAFANA_INVESTIGATION.md). Exit 0 means report produced,
+not a healthy service or complete investigation. Existing formats remain unchanged.
+
 - Run decant connect grafana --help for guided datasource and scope setup.
 - Run decant doctor --profile production to check the saved profile.
 

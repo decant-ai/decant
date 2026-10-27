@@ -18,7 +18,7 @@ use std::{
 const HELP: &str = "Grafana connection and query-access diagnostics\n\n+  decant connect grafana --url <HTTPS_URL> --token-env <NAME> [--profile <NAME>]\n+  decant doctor --profile <NAME> [--profile-dir <PATH>]\n\n+Connect guides datasource and scope selection, then asks for confirmation.\n+For noninteractive setup supply --yes, --prometheus-uid, --service-label,\n+--service, --environment-label, and --environment. Optional: --tempo-uid,\n+--loki-uid, --ca-file, --profile-dir. Profiles default to .decant/profiles.\n+Tempo uses resource.service.name and resource.deployment.environment.name;\n+selecting Tempo confirms these mappings. Loki shares the supplied label mapping.\n+Only read queries are sent. Doctor readiness is not service health.\n";
 
 #[derive(Clone, Copy, Debug)]
-enum Failure {
+pub(crate) enum Failure {
     Usage,
     Configuration,
     Credentials,
@@ -152,7 +152,7 @@ fn execute(
     runtime.shutdown_timeout(Duration::from_secs(1));
     result
 }
-fn token(name: &str) -> Result<String, Failure> {
+pub(crate) fn token(name: &str) -> Result<String, Failure> {
     if !label(name) {
         return Err(Failure::Configuration);
     }
@@ -162,7 +162,7 @@ fn token(name: &str) -> Result<String, Failure> {
     }
     Ok(token)
 }
-fn bounded_file(path: &Path, cap: usize) -> Result<Vec<u8>, Failure> {
+pub(crate) fn bounded_file(path: &Path, cap: usize) -> Result<Vec<u8>, Failure> {
     if !fs::symlink_metadata(path)
         .map_err(|_| Failure::ProfileIo)?
         .is_file()
@@ -182,11 +182,11 @@ fn bounded_file(path: &Path, cap: usize) -> Result<Vec<u8>, Failure> {
     }
     Ok(bytes)
 }
-fn read_ca(path: Option<&str>) -> Result<Option<Vec<u8>>, Failure> {
+pub(crate) fn read_ca(path: Option<&str>) -> Result<Option<Vec<u8>>, Failure> {
     path.map(|p| bounded_file(Path::new(p), 64 * 1024))
         .transpose()
 }
-fn prompt(label: &str) -> Result<String, Failure> {
+pub(crate) fn prompt(label: &str) -> Result<String, Failure> {
     let mut stderr = io::stderr().lock();
     write!(stderr, "{label}: ")
         .and_then(|_| stderr.flush())
@@ -315,7 +315,7 @@ async fn connect_profile(
     save(dir, name, &profile.encode()?)?;
     Ok((b"{\"format\":\"decant-grafana-connect\",\"version\":1,\"saved\":true,\"query_access_verified\":false}\n".to_vec(),true))
 }
-fn directory(path: &Path, create: bool) -> Result<(), Failure> {
+pub(crate) fn directory(path: &Path, create: bool) -> Result<(), Failure> {
     let mut cursor = PathBuf::new();
     for component in path.components() {
         if matches!(component, Component::ParentDir) {
@@ -351,7 +351,7 @@ fn directory(path: &Path, create: bool) -> Result<(), Failure> {
     }
     Ok(())
 }
-fn save(dir: &Path, name: &str, bytes: &[u8]) -> Result<(), Failure> {
+pub(crate) fn save(dir: &Path, name: &str, bytes: &[u8]) -> Result<(), Failure> {
     directory(dir, true)?;
     let mut options = OpenOptions::new();
     options.write(true).create_new(true);
@@ -370,22 +370,7 @@ fn save(dir: &Path, name: &str, bytes: &[u8]) -> Result<(), Failure> {
     Ok(())
 }
 async fn doctor_profile(dir: &Path, name: &str) -> Result<(Vec<u8>, bool), Failure> {
-    directory(dir, false)?;
-    let path = dir.join(format!("{name}.json"));
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        if fs::symlink_metadata(&path)
-            .map_err(|_| Failure::ProfileIo)?
-            .permissions()
-            .mode()
-            & 0o077
-            != 0
-        {
-            return Err(Failure::ProfileIo);
-        }
-    }
-    let profile = ProfileV1::decode(&bounded_file(&path, 16 * 1024)?)?;
+    let profile = load_profile(dir, name)?;
     let bearer = token(&profile.token_env)?;
     let ca = read_ca(profile.ca_file.as_deref())?;
     let end = SystemTime::now()
@@ -401,4 +386,25 @@ async fn doctor_profile(dir: &Path, name: &str) -> Result<(Vec<u8>, bool), Failu
     }
     bytes.push(b'\n');
     Ok((bytes, report.ready))
+}
+pub(crate) fn load_profile(dir: &Path, name: &str) -> Result<ProfileV1, Failure> {
+    if !identifier(name) {
+        return Err(Failure::Configuration);
+    }
+    directory(dir, false)?;
+    let path = dir.join(format!("{name}.json"));
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if fs::symlink_metadata(&path)
+            .map_err(|_| Failure::ProfileIo)?
+            .permissions()
+            .mode()
+            & 0o077
+            != 0
+        {
+            return Err(Failure::ProfileIo);
+        }
+    }
+    ProfileV1::decode(&bounded_file(&path, 16 * 1024)?).map_err(Failure::from)
 }

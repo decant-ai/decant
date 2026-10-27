@@ -25,10 +25,13 @@
 - Multiple views, arbitrary queries, HMAC pseudonymization, automatic sensitive-field discovery, final output scanning, and a general policy runtime are not implemented.
 - V3 `deny` means omit. It does not transform or pseudonymize protected values, which remain inside local admitted/checkpoint state when mapped and can still affect admission resource accounting or rejection outcomes; no noninterference property is claimed.
 - MCP is local stdio only. Remote MCP, tenant authentication, gRPC, and HTTP serving boundaries are not implemented.
-- There is no model client or model routing.
+- Optional Anthropic reasoning requires an explicit model and egress authorization. There is no model routing, arbitrary tool execution or remediation. Invalid provider output retains evidence; valid references do not establish a correct diagnosis.
 - Do not infer complete anonymization, privacy compliance, confidentiality, or authorization from payload omission.
 
 ## Operations and evidence limits
+
+- Grafana investigation requires explicit counter/classic-histogram mappings and confirmed scope. Tempo is sampled first-N evidence; Loki is selected log counts, not request-error rates. Traffic-mix and version-comparison checks remain unavailable. Native histograms and arbitrary-schema inference are not supported.
+- Follow-ups inspect a saved capture. Refresh is explicit and preserves the prior bundle. Local Unix storage is cooperative and quota-limited, not a hostile same-account or universal power-loss guarantee. Synthetic TLS tests do not prove actual backend/provider compatibility or independent-user activation.
 
 - No production Prometheus/OpenTelemetry export, dashboard, control plane, Kubernetes integration, or hosted service exists.
 - The opt-in Kafka harness covers one pinned image tag and local topology, not a compatibility matrix.

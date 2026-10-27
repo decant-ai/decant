@@ -27,7 +27,7 @@
 ## Operating boundary
 
 - Single process and single node.
-- One process, one statically configured source, one configured view, and one checkpoint writer.
+- Kafka runtimes use one statically configured source/view and one checkpoint writer. Grafana investigation uses one confirmed instance/scope and bounded datasource reads, not an atomic cross-source snapshot.
 - Finite invocations or one supervised resident service; the service does not daemonize or restart itself.
 - Local stdout output for finite commands; MCP protocol-only stdout and value-safe lifecycle stderr for the resident service; local checkpoint files.
 - No hosted Decant service. The optional model library makes explicitly authorized external calls; deterministic commands do not require a model.
@@ -44,21 +44,21 @@ results preserved. No raw log bodies or full traces are emitted by doctor.
 This is query-access diagnostics, not a backend incident-investigation report.
 See [setup and compatibility limits](GRAFANA_SETUP.md).
 
-The backend library also contains bounded sampled Tempo operation/dependency
-evidence with explicit gaps. It is not exposed as an investigation CLI command.
+The investigation CLI also includes bounded sampled Tempo operation/dependency
+evidence with explicit gaps when selected during guided configuration.
 See [trace evidence semantics and limits](TRACE_EVIDENCE.md).
 The Loki library recipe compares scoped log counts, with body acquisition off
 unless bounded field projection is explicitly configured. See
 [log evidence semantics and limits](LOG_EVIDENCE.md).
-The application library can compose these captures into versioned JSON/Markdown
-investigation documents and private offline replay bundles. It does not add a
-standalone investigation command or model reasoning. See
+The application composes these captures into versioned JSON/Markdown
+investigation documents and private offline replay bundles. See
 [investigation and replay limits](INVESTIGATION_REPLAY.md).
 
-The optional model adapter is a separate library boundary, not an automatic
-agent or new CLI command. See [model access and limits](MODEL_ACCESS.md).
+The optional model adapter is a separate, explicitly authorized boundary.
+See [model access and limits](MODEL_ACCESS.md).
 
-The application library also provides a bounded optional reasoning loop over
+The CLI provides a bounded optional reasoning loop over
 captured evidence, with model-independent findings and explicit unsupported
-checks. See [investigator semantics](INVESTIGATOR.md). This library addition does
-not itself add a command or claim live-provider compatibility.
+checks. See [investigator semantics](INVESTIGATOR.md) and the
+[guided configure/investigate/follow-up workflow](GRAFANA_INVESTIGATION.md).
+No live-provider compatibility or comparative diagnostic result is claimed.

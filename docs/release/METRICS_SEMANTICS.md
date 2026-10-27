@@ -1,9 +1,9 @@
 # Metrics comparison semantics
 
 The internal backend library has a versioned, model-independent Prometheus
-comparison recipe. It is not a new CLI investigation command or a replacement
-for the observed-span evidence format. Grafana connect/doctor only configures
-and checks query access.
+comparison recipe used by the [investigation CLI](GRAFANA_INVESTIGATION.md).
+It does not replace the observed-span evidence format. Grafana connect/doctor
+configures and checks query access; investigate uses explicit metric mappings.
 
 The recipe requires an explicit request counter, an error label and exact
 values, a classic duration histogram bucket metric, and an explicit seconds
