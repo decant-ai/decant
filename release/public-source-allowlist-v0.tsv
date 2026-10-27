@@ -14,13 +14,16 @@ file	docs/release/BINARY_PACKAGE_README.md
 file	docs/release/COMMAND_REFERENCE.md
 file	docs/release/EVIDENCE_EVALUATION.md
 file	docs/release/EVIDENCE_QUICKSTART.md
+file	docs/release/GRAFANA_INVESTIGATION.md
 file	docs/release/GRAFANA_SETUP.md
 file	docs/release/INVESTIGATION_REPLAY.md
+file	docs/release/INVESTIGATOR.md
 file	docs/release/KAFKA_EVIDENCE.md
 file	docs/release/KNOWN_LIMITATIONS.md
 file	docs/release/LOG_EVIDENCE.md
 file	docs/release/MCP_COMPATIBILITY.md
 file	docs/release/METRICS_SEMANTICS.md
+file	docs/release/MODEL_ACCESS.md
 file	docs/release/PRODUCTION_PILOT_CHECKLIST.md
 file	docs/release/ROLLBACK.md
 file	docs/release/SUPPORTED_SCOPE.md

@@ -2,8 +2,9 @@
 
 The internal Tempo recipe reads through a confirmed Grafana datasource. It
 uses two explicitly scoped searches and fetches each distinct selected trace
-once through `/api/v2/traces/:id`, with span pruning disabled. This recipe is a
-library capability, not an investigation CLI command.
+once through `/api/v2/traces/:id`, with span pruning disabled. The
+[investigation CLI](GRAFANA_INVESTIGATION.md) uses this recipe when Tempo is
+explicitly selected during configuration, with names omitted by default.
 
 The comparison uses equal preceding/current windows, 60–3600 seconds each,
 with an explicit Unix-second cut. Span starts use `(start, end]` membership.

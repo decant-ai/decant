@@ -106,6 +106,7 @@ pub struct HttpSessionV1 {
     client: Client,
     base: Url,
     authorization: header::HeaderValue,
+    authorization_name: header::HeaderName,
     limits: LimitsV1,
     deadline: Instant,
     usage: UsageV1,
@@ -195,6 +196,7 @@ impl HttpSessionV1 {
             client,
             base,
             authorization,
+            authorization_name: header::AUTHORIZATION,
             limits,
             deadline: Instant::now() + limits.elapsed,
             usage: UsageV1::default(),
@@ -204,6 +206,49 @@ impl HttpSessionV1 {
 
     pub fn usage(&self) -> UsageV1 {
         self.usage
+    }
+
+    pub(crate) fn restrict_bytes(&mut self, bytes: usize) -> Result<(), BackendErrorV1> {
+        if self.usage.attempts != 0 || bytes == 0 || bytes > self.limits.total_bytes {
+            return Err(BackendErrorV1::InvalidConfiguration);
+        }
+        self.limits.total_bytes = bytes;
+        self.limits.response_bytes = self.limits.response_bytes.min(bytes);
+        Ok(())
+    }
+
+    pub(crate) fn model(
+        base: &str,
+        key: &str,
+        ca: Option<&[u8]>,
+        limits: LimitsV1,
+    ) -> Result<Self, BackendErrorV1> {
+        let mut session = Self::new(base, key, ca, limits)?;
+        let mut value =
+            header::HeaderValue::from_str(key).map_err(|_| BackendErrorV1::InvalidConfiguration)?;
+        value.set_sensitive(true);
+        session.authorization = value;
+        session.authorization_name = header::HeaderName::from_static("x-api-key");
+        Ok(session)
+    }
+
+    // Only the model adapter can submit this fixed operation. Not a generic
+    // backend write API; origin selection is confined to its constructor.
+    pub(crate) async fn messages(&mut self, body: Vec<u8>) -> Result<ResponseV1, BackendErrorV1> {
+        if body.len() > 96 * 1024 {
+            return Err(BackendErrorV1::InvalidRequest);
+        }
+        let url = self
+            .base
+            .join("v1/messages")
+            .map_err(|_| BackendErrorV1::InvalidRequest)?;
+        let request = self
+            .client
+            .post(url)
+            .header("anthropic-version", "2023-06-01")
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(body);
+        self.execute(request).await
     }
 
     /// Paths are individual non-traversing segments, never an absolute URL.
@@ -246,6 +291,13 @@ impl HttpSessionV1 {
         if url.as_str().len() > 16 * 1024 {
             return Err(bad);
         }
+        self.execute(self.client.get(url)).await
+    }
+
+    async fn execute(
+        &mut self,
+        request: reqwest::RequestBuilder,
+    ) -> Result<ResponseV1, BackendErrorV1> {
         if self.exhausted
             || self.usage.attempts >= self.limits.attempts
             || self.usage.received_bytes >= self.limits.total_bytes
@@ -258,16 +310,17 @@ impl HttpSessionV1 {
         let deadline = self
             .deadline
             .min(Instant::now() + self.limits.request_timeout);
-        tokio::time::timeout_at(deadline, self.read(url))
+        tokio::time::timeout_at(deadline, self.read(request))
             .await
             .unwrap_or(Err(BackendErrorV1::Timeout))
     }
 
-    async fn read(&mut self, url: Url) -> Result<ResponseV1, BackendErrorV1> {
-        let mut response = self
-            .client
-            .get(url)
-            .header(header::AUTHORIZATION, self.authorization.clone())
+    async fn read(
+        &mut self,
+        request: reqwest::RequestBuilder,
+    ) -> Result<ResponseV1, BackendErrorV1> {
+        let mut response = request
+            .header(self.authorization_name.clone(), self.authorization.clone())
             .header(header::ACCEPT, "application/json")
             .header(header::ACCEPT_ENCODING, "identity")
             .send()

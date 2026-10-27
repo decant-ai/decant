@@ -5,6 +5,9 @@ Prometheus/Mimir, Tempo and Loki through Grafana. This workflow checks access an
 data availability; it does not diagnose an incident or compile a trace report.
 Existing file/Kafka evidence commands are separate.
 
+After setup, use the [guided investigation workflow](GRAFANA_INVESTIGATION.md)
+to configure metric recipes, compare intervals and revisit saved evidence.
+
 Build the CLI using the repository instructions, then run:
 
 ~~~sh

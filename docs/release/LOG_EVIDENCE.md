@@ -29,7 +29,8 @@ timestamps are checked locally. Cap hits and identical repeated returned
 entries remain visible; sample counts are not a population estimate. Captures
 may contain sensitive data even when the derived report omits it.
 
-The recipe is a library capability, not an investigation CLI command. Local
+The [investigation CLI](GRAFANA_INVESTIGATION.md) uses the count-only recipe;
+field-projected examples remain a library capability, not a CLI option. Local
 TLS fixtures exercise request/response behavior; live Grafana/Loki execution
 and deployment compatibility have not been verified.
 See [Loki HTTP API](https://grafana.com/docs/loki/latest/reference/loki-http-api/)

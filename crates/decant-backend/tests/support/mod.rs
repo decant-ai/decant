@@ -176,6 +176,22 @@ impl Server {
                     }
                     request.push(byte[0]);
                 }
+                let content_length = String::from_utf8_lossy(&request)
+                    .lines()
+                    .find_map(|line| {
+                        line.to_ascii_lowercase()
+                            .strip_prefix("content-length:")
+                            .and_then(|s| s.trim().parse::<usize>().ok())
+                    })
+                    .unwrap_or(0);
+                if content_length > 96 * 1024 {
+                    continue;
+                }
+                let header_bytes = request.len();
+                request.resize(header_bytes + content_length, 0);
+                if tls.read_exact(&mut request[header_bytes..]).is_err() {
+                    continue;
+                }
                 recorded
                     .lock()
                     .unwrap()
