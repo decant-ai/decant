@@ -27,6 +27,17 @@ fn input() -> ModelInputV1 {
 fn explanation() -> Value {
     json!({"interpretation":"An observed latency increase warrants checking the dependency; causality is unverified.","references":[reference()],"hypotheses":[{"kind":"latency_regression","assessment":"supported","supporting":[reference()],"contradicting":[],"next_checks":["dependencies"]}]})
 }
+fn confirmed_scope() -> crate::grafana::ScopeV1 {
+    crate::grafana::ScopeV1 {
+        service_label: "SYNTHETIC_PRIVATE_SERVICE_LABEL".into(),
+        service: "SYNTHETIC_APPROVED_SERVICE".into(),
+        environment_label: "SYNTHETIC_PRIVATE_ENV_LABEL".into(),
+        environment: "SYNTHETIC_APPROVED_ENV".into(),
+    }
+}
+fn scope() -> PlanningScopeV1 {
+    PlanningScopeV1::from_confirmed(&confirmed_scope()).unwrap()
+}
 
 #[tokio::test]
 async fn exactly_two_calls_ordered_bounded_and_accounted() {
@@ -40,13 +51,13 @@ async fn exactly_two_calls_ordered_bounded_and_accounted() {
         Err(ModelErrorV1::BudgetExhausted)
     ));
     assert_eq!(
-        m.plan("Why is the configured service slower?")
+        m.plan("Why is the configured service slower?", &scope())
             .await
             .unwrap(),
         RecipeV1::Latency
     );
     assert_eq!(
-        m.plan("repeat").await.unwrap_err(),
+        m.plan("repeat", &scope()).await.unwrap_err(),
         ModelErrorV1::BudgetExhausted
     );
     m.explain(&input()).await.unwrap();
@@ -84,8 +95,28 @@ async fn exactly_two_calls_ordered_bounded_and_accounted() {
                 "decant_explain"
             }
         );
-        if i == 1 {
+        assert!(!body.contains("SYNTHETIC_PRIVATE"));
+        assert!(!body.contains("SYNTHETIC_MODEL_SECRET"));
+        if i == 0 {
+            let content: Value =
+                serde_json::from_str(b["messages"][0]["content"].as_str().unwrap()).unwrap();
+            assert_eq!(
+                content,
+                json!({
+                    "question":"Why is the configured service slower?",
+                    "scope":{"service":"SYNTHETIC_APPROVED_SERVICE","environment":"SYNTHETIC_APPROVED_ENV"},
+                    "interval":"operator_confirmed_interval"
+                })
+            );
+            assert!(
+                b["system"]
+                    .as_str()
+                    .unwrap()
+                    .contains("conflicts with the confirmed scope")
+            );
+        } else {
             assert!(!body.contains("Why is the configured service slower?"));
+            assert!(!body.contains("SYNTHETIC_APPROVED"));
         }
     }
     assert!(!format!("{m:?}").contains("SYNTHETIC_MODEL_SECRET"));
@@ -100,13 +131,13 @@ async fn invalid_or_declined_plan_cannot_execute_another_stage() {
     ] {
         let s = Server::new(vec![Reply::json(200, &message("decant_plan", value))]);
         let mut m = model(&s);
-        let _ = m.plan("synthetic question").await;
+        let _ = m.plan("synthetic question", &scope()).await;
         assert!(matches!(
             m.explain(&input()).await,
             Err(ModelErrorV1::BudgetExhausted)
         ));
         assert_eq!(
-            m.plan("retry").await.unwrap_err(),
+            m.plan("retry", &scope()).await.unwrap_err(),
             ModelErrorV1::BudgetExhausted
         );
         assert_eq!(s.requests.lock().unwrap().len(), 1);
@@ -121,12 +152,12 @@ async fn failed_attempt_retains_usage_and_is_not_retried() {
     ] {
         let s = Server::new(vec![reply]);
         let mut m = model(&s);
-        let error = m.plan("synthetic").await.unwrap_err();
+        let error = m.plan("synthetic", &scope()).await.unwrap_err();
         assert!(!format!("{error} {error:?}").contains("SYNTHETIC_PROTECTED"));
         assert_eq!(m.usage().calls, 1);
         assert_eq!(m.usage().unknown_usage_calls, 1);
         assert_eq!(
-            m.plan("retry").await.unwrap_err(),
+            m.plan("retry", &scope()).await.unwrap_err(),
             ModelErrorV1::BudgetExhausted
         );
         assert_eq!(s.requests.lock().unwrap().len(), 1);
@@ -148,7 +179,7 @@ async fn final_unknown_fields_references_and_control_text_fail() {
             Reply::json(200, &message("decant_explain", e)),
         ]);
         let mut m = model(&s);
-        m.plan("synthetic").await.unwrap();
+        m.plan("synthetic", &scope()).await.unwrap();
         assert!(matches!(
             m.explain(&input()).await,
             Err(ModelErrorV1::InvalidResponse)
@@ -172,4 +203,32 @@ fn bounded_question_and_input_diagnostics() {
             ModelErrorV1::InvalidInput
         );
     }
+}
+
+#[test]
+fn scope_projection_bounds_and_redaction() {
+    assert!(!format!("{:?}", scope()).contains("SYNTHETIC_APPROVED"));
+    for field in ["service", "environment"] {
+        for value in [
+            String::new(),
+            "x".repeat(129),
+            "é".repeat(65),
+            "SYNTHETIC_SECRET\n".into(),
+        ] {
+            let mut s = confirmed_scope();
+            if field == "service" {
+                s.service = value;
+            } else {
+                s.environment = value;
+            }
+            assert_eq!(
+                PlanningScopeV1::from_confirmed(&s).unwrap_err(),
+                ModelErrorV1::InvalidInput
+            );
+        }
+    }
+    let mut s = confirmed_scope();
+    s.service = "x".repeat(128);
+    s.environment = "é".repeat(64);
+    assert!(PlanningScopeV1::from_confirmed(&s).is_ok());
 }

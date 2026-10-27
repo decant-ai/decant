@@ -34,11 +34,14 @@ response may fail closed.
 
 `investigate ask` uses a separate single-use plan/explain adapter: at most two
 attempts, including failures, with no retry or intermediate model access. The
-first call receives the user question; the final call receives only a bounded
-numeric/closed-code/opaque-reference projection, not the question or raw telemetry.
-Question egress is disclosed by the command's explicit authorization prompt.
-Configured service/environment names stay local unless the user writes them in
-the question; the planner cannot verify a name against that undisclosed scope.
+first call receives the user question and confirmed service/environment names;
+the final call receives only a bounded numeric/closed-code/opaque-reference
+projection, not the question or raw telemetry. The explicit authorization prompt
+discloses question and scope egress. Only these two validated profile values
+are projected (128 UTF-8 bytes each); label names, datasource IDs, origins, paths
+and credential references are excluded. The planner can request clarification for
+conflicting names, but this is not guaranteed semantic detection. Local access
+remains bound to the confirmed scope independently of the model response.
 
 The final structured response may contain up to 2048 UTF-8 bytes of explanatory
 prose, alongside validated references and typed hypotheses. Prose is an unverified

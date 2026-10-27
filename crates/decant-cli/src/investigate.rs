@@ -455,7 +455,7 @@ fn prepare(mode: String, o: Options) -> Result<Job, Failure> {
             return Err(Failure::Configuration);
         }
         let prompt = if mode == "ask" {
-            "Send your question and projected numeric evidence to Anthropic (at most two billable calls)? Do not include secrets. Type yes"
+            "Send your question, confirmed service/environment names, and projected numeric evidence to Anthropic (at most two billable calls)? Do not include secrets. Type yes"
         } else {
             "Send projected numeric evidence to Anthropic (up to six billable calls)? Type yes"
         };
@@ -673,7 +673,7 @@ pub fn run(args: impl Iterator<Item = OsString>) -> ExitCode {
                 .write_all(HELP.as_bytes())
                 .map_err(|_| Failure::Io)?;
             io::stdout().lock().write_all(b"\n  decant investigate report --bundle <ID> [--format markdown|json] [--store-dir <PATH>]\nRecompute, verify and render the original evidence report offline.\n").map_err(|_| Failure::Io)?;
-            io::stdout().lock().write_all(b"\n  decant investigate ask --question <TEXT> --profile <NAME> --model <MODEL>\n    --model-key-env <NAME> --allow-model-egress [--since 15m] [--until <SECONDS>]\nAt most two model calls: plan, deterministic conditional acquisition, explain.\nSends the question and numeric evidence; never include secrets in the question.\nOptional --bundle <ID> reuses compatible evidence; requires explicit --until\nand matching --since. No automatic refresh. Latency/error recipes only.\n").map_err(|_|Failure::Io)?;
+            io::stdout().lock().write_all(b"\n  decant investigate ask --question <TEXT> --profile <NAME> --model <MODEL>\n    --model-key-env <NAME> --allow-model-egress [--since 15m] [--until <SECONDS>]\nAt most two model calls: plan, deterministic conditional acquisition, explain.\nSends the question, confirmed service/environment names, and numeric evidence.\nNever include secrets in the question.\nOptional --bundle <ID> reuses compatible evidence; requires explicit --until\nand matching --since. No automatic refresh. Latency/error recipes only.\n").map_err(|_|Failure::Io)?;
             return Ok(0);
         }
         if mode == "configure" {

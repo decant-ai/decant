@@ -67,12 +67,15 @@ Use your chosen model ID, not the placeholder. `ask` needs no `--reason` flag.
 The confirmed profile and `--since`/`--until` determine scope and time; a question
 cannot override them. Review the confirmed scope printed in the answer. Without
 `--allow-model-egress`, an interactive terminal must confirm; scripts fail before
-model/backend calls. Your question (at most 1024 UTF-8 bytes, no controls) is sent
-to Anthropic. Do not include credentials or sensitive details, including in shell
-history. The question is not copied to reports, bundles or diagnostics.
-Profile service/environment names are not added to the model input. The planner
-therefore cannot verify that a service named in your question matches the profile;
-select the correct profile yourself. Names you write in the question are sent.
+model/backend calls. Your question (at most 1024 UTF-8 bytes, no controls) and the
+confirmed service/environment names (at most 128 UTF-8 bytes each) are sent to
+Anthropic in the planning call. Do not include credentials or sensitive details,
+including in shell history. The question is not copied to reports, bundles or diagnostics.
+No other profile fields are sent: label names, backend addresses, datasource IDs,
+credential references and paths remain excluded. The planner is instructed to
+request clarification for a conflicting service/environment, but model interpretation
+is fallible. Local queries always use the confirmed profile, never a model-selected
+scope. The final explanation call does not receive those names or the question.
 
 There is one planning call and at most one explanation call, never an intermediate
 model call or automatic retry. The planner selects latency or selected-error

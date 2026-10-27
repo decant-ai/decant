@@ -8,7 +8,7 @@ for the new evidence workflow and per-subcommand help for exact arguments.
 For the read-only investigation workflow:
 
 - `decant investigate configure --profile production`: guided explicit metric and optional trace/log mappings.
-- `decant investigate ask --profile production --question "Why is checkout slower?" --model MODEL --model-key-env ANTHROPIC_API_KEY --allow-model-egress`: one planning call, deterministic conditional acquisition and one explanation call. Applies to the confirmed profile only; sends the question externally.
+- `decant investigate ask --profile production --question "Why is checkout slower?" --model MODEL --model-key-env ANTHROPIC_API_KEY --allow-model-egress`: one planning call, deterministic conditional acquisition and one explanation call. Applies to the confirmed profile only; sends the question and confirmed service/environment names externally.
 - `decant investigate --profile production --since 15m`: acquire, save and compare evidence; Markdown by default.
 - `decant investigate follow-up --bundle ID --focus errors`: inspect the same evidence offline.
 - `decant investigate report --bundle ID --format json`: verify/recompute the original evidence report offline.

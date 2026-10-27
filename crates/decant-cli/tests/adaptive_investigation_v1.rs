@@ -103,9 +103,13 @@ impl Script {
     }
 }
 impl TwoStageModelV1 for Script {
-    fn plan<'a>(&'a mut self, q: &'a str) -> PlanFuture<'a> {
+    fn plan<'a>(&'a mut self, q: &'a str, scope: &'a PlanningScopeV1) -> PlanFuture<'a> {
         Box::pin(async move {
             validate_question(q)?;
+            assert_eq!(
+                serde_json::to_value(scope).unwrap(),
+                json!({"service":"checkout","environment":"prod"})
+            );
             self.calls += 1;
             if self.delay {
                 tokio::time::sleep(Duration::from_millis(100)).await;

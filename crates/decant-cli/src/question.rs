@@ -10,7 +10,7 @@ use decant_backend::{
     grafana::GrafanaV1,
     model::{
         ModelErrorV1, ModelInputV1, ModelUsageV1,
-        two_stage::{ExplanationV1, RecipeV1, TwoStageModelV1, validate_question},
+        two_stage::{ExplanationV1, PlanningScopeV1, RecipeV1, TwoStageModelV1, validate_question},
     },
 };
 use serde_json::{Value, json};
@@ -193,7 +193,9 @@ pub async fn investigate(
         error: None,
         input: None,
     };
-    let plan = timeout_at(deadline, provider.plan(request.question))
+    let scope = PlanningScopeV1::from_confirmed(&request.config.profile.scope)
+        .map_err(|_| E::InvalidInput)?;
+    let plan = timeout_at(deadline, provider.plan(request.question, &scope))
         .await
         .unwrap_or(Err(ModelErrorV1::BudgetExhausted));
     let recipe = match plan {

@@ -50,8 +50,9 @@ The question applies only to the service/environment in the confirmed profile.
 This path makes at most two model calls: select a latency/error recipe, then
 explain the evidence. Between them, Decant compares metrics and conditionally
 fetches configured Tempo/Loki evidence when the selected measurement increased
-or is unknown. It saves evidence before the final call. Your question is sent to
-Anthropic; never include secrets. Backend log bodies, queries and raw traces are
+or is unknown. It saves evidence before the final call. Your question and confirmed
+service/environment names are sent to Anthropic; never include secrets. Backend
+log bodies, queries and raw traces are
 not sent to the model. Explanations are labelled interpretations, not causal proof.
 See [question workflow and limits](docs/release/GRAFANA_INVESTIGATION.md#ask-a-question).
 Two calls is a resource ceiling, not demonstrated token or cost savings.

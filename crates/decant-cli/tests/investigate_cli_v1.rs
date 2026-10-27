@@ -215,6 +215,7 @@ fn ask_question_bounds_consent_and_credentials_precede_backend_calls() {
     let help = run(&case.dir.0, &["investigate", "ask", "--help"], "", false);
     assert!(help.status.success());
     assert!(String::from_utf8_lossy(&help.stdout).contains("At most two model calls"));
+    assert!(String::from_utf8_lossy(&help.stdout).contains("confirmed service/environment names"));
 }
 #[test]
 fn guided_setup_and_scoped_acquisition_without_json_editing() {
