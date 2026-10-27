@@ -10,25 +10,68 @@ rust-version.workspace = true
 name = "decant"
 path = "src/main.rs"
 
+[features]
+default = ["full"]
+full = [
+    "dep:decant-fixtures", "dep:decant-ir", "dep:decant-jsonl", "dep:decant-kafka",
+    "dep:decant-kafka-client", "dep:decant-kafka-live", "dep:decant-mcp",
+    "dep:decant-otlp-ingest", "dep:decant-runtime", "dep:decant-state",
+    "dep:decant-storage", "dep:rmcp",
+]
+
 [dependencies]
 decant-backend = { path = "../decant-backend" }
 decant-compiler = { path = "../decant-compiler" }
-decant-fixtures = { path = "../decant-fixtures" }
-decant-ir = { path = "../decant-ir" }
-decant-jsonl = { path = "../decant-jsonl" }
-decant-kafka = { path = "../decant-kafka" }
-decant-kafka-client = { path = "../decant-kafka-client" }
-decant-kafka-live = { path = "../decant-kafka-live" }
-decant-mcp = { path = "../decant-mcp" }
-decant-otlp-ingest = { path = "../decant-otlp-ingest" }
-decant-runtime = { path = "../decant-runtime" }
-decant-state = { path = "../decant-state" }
-decant-storage = { path = "../decant-storage" }
-rmcp = { version = "=3.2.0", default-features = false, features = ["server"] }
+decant-fixtures = { path = "../decant-fixtures", optional = true }
+decant-ir = { path = "../decant-ir", optional = true }
+decant-jsonl = { path = "../decant-jsonl", optional = true }
+decant-kafka = { path = "../decant-kafka", optional = true }
+decant-kafka-client = { path = "../decant-kafka-client", optional = true }
+decant-kafka-live = { path = "../decant-kafka-live", optional = true }
+decant-mcp = { path = "../decant-mcp", optional = true }
+decant-otlp-ingest = { path = "../decant-otlp-ingest", optional = true }
+decant-runtime = { path = "../decant-runtime", optional = true }
+decant-state = { path = "../decant-state", optional = true }
+decant-storage = { path = "../decant-storage", optional = true }
+rmcp = { version = "=3.2.0", default-features = false, features = ["server"], optional = true }
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = { version = "=1.0.151" }
-tokio = { version = "=1.53.1", default-features = false, features = ["io-std", "macros", "rt", "sync", "signal", "time", "fs"] }
+tokio = { version = "=1.53.1", default-features = false, features = ["io-std", "io-util", "macros", "rt", "sync", "signal", "time", "fs"] }
 
 [dev-dependencies]
 native-tls = { version = "=0.2.18", default-features = false }
 decant-ingest = { path = "../decant-ingest" }
+
+[[test]]
+name = "demo_cli_v0"
+required-features = ["full"]
+[[test]]
+name = "evidence_cli_v1"
+required-features = ["full"]
+[[test]]
+name = "kafka_json_cli_v0"
+required-features = ["full"]
+[[test]]
+name = "kafka_live_interop_assets_v0"
+required-features = ["full"]
+[[test]]
+name = "kafka_mcp_cli_v0"
+required-features = ["full"]
+[[test]]
+name = "kafka_mcp_fault_assets_v0"
+required-features = ["full"]
+[[test]]
+name = "kafka_mcp_pilot_assets_v0"
+required-features = ["full"]
+[[test]]
+name = "kafka_mcp_startup_diagnostics_v0"
+required-features = ["full"]
+[[test]]
+name = "opentelemetry_demo_interop_v0"
+required-features = ["full"]
+[[test]]
+name = "otlp_jsonl_cli_v0"
+required-features = ["full"]
+[[test]]
+name = "repository_release_assets_v0"
+required-features = ["full"]

@@ -15,6 +15,13 @@ pushes to main. Keep private telemetry and business records out of the repositor
 4. Run `./scripts/check-v0.sh` before opening a pull request.
 5. Describe public or persisted contract changes and their compatibility impact.
 
+For investigation-only development, use `cargo test --locked --offline -p decant-cli
+--no-default-features --all-targets` and the corresponding Clippy command. This
+does not require librdkafka; Linux still needs pkg-config and OpenSSL development
+libraries for native TLS. Keep the default full gate passing too. See
+[investigation binary candidates](docs/release/INVESTIGATION_BINARY.md) for build,
+verification and the distinction between scripted installation and external users.
+
 Do not include private data, credentials, proprietary code, or employer-confidential material in issues, fixtures, tests, or pull requests. Use unmistakably synthetic examples.
 
 ## Current contributor-policy status

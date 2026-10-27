@@ -35,3 +35,27 @@ jobs:
           mkdir -p .local
           python3 tools/build_binary_candidate_v1.py --output .local/ci-candidate
           python3 tools/verify_binary_candidate_v1.py .local/ci-candidate
+  investigation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5.0.1
+        with:
+          persist-credentials: false
+      - name: Install TLS build prerequisites (no Kafka)
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends pkg-config libssl-dev
+      - name: Fetch locked Rust dependencies
+        run: cargo fetch --locked
+      - name: Check investigation-only graph and code
+        run: |
+          python3 tools/investigation_candidate_v1.py graph
+          cargo clippy --locked --offline -p decant-cli --no-default-features --all-targets -- -D warnings
+          cargo test --locked --offline -p decant-cli --no-default-features --all-targets
+      - name: Build and verify unsigned investigation candidate (no publication)
+        run: |
+          mkdir -p .local
+          python3 tools/investigation_candidate_v1.py build --output .local/investigation-candidate
+          python3 tools/investigation_candidate_v1.py verify --output .local/investigation-candidate

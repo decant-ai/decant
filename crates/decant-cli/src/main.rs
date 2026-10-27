@@ -2,13 +2,18 @@
 
 #![forbid(unsafe_code)]
 
+#[cfg(feature = "full")]
 mod demo;
+#[cfg(feature = "full")]
 mod evidence;
 mod grafana;
 mod investigate;
+#[cfg(feature = "full")]
 mod kafka_json;
+#[cfg(feature = "full")]
 mod kafka_mcp;
 mod lifecycle;
+#[cfg(feature = "full")]
 mod otlp_jsonl;
 
 use std::env;
@@ -16,16 +21,28 @@ use std::ffi::OsStr;
 use std::io::{self, Write};
 use std::process::ExitCode;
 
+#[cfg(feature = "full")]
 const HELP_TEXT: &[u8] = b"Decant local-first context compiler\n\nUsage:\n  decant connect grafana --help\n  decant doctor --help\n  decant investigate --help\n  decant evidence --help\n  decant evidence demo\n  decant demo sre\n  decant ingest otlp-jsonl --file <PATH>\n  decant ingest kafka-json --config <PATH>\n  decant serve kafka-mcp --config <PATH>\n  decant --help\n  decant --version\n";
+#[cfg(not(feature = "full"))]
+const HELP_TEXT: &[u8] = b"Decant read-only investigator (investigation-only build)\n\nUsage:\n  decant connect grafana --help\n  decant doctor --help\n  decant investigate --help\n  decant --help\n  decant --version\n\nFile, streaming and MCP commands require the full build.\n";
 const VERSION_TEXT: &str = concat!("decant ", env!("CARGO_PKG_VERSION"), "\n");
+#[cfg(feature = "full")]
 const USAGE_ERROR_TEXT: &[u8] =
     b"error: invalid usage\n\nUsage:\n  decant demo sre\n  decant ingest otlp-jsonl --file <PATH>\n  decant ingest kafka-json --config <PATH>\n  decant serve kafka-mcp --config <PATH>\n  decant --help\n  decant --version\n";
+#[cfg(feature = "full")]
 const INTERNAL_ERROR_TEXT: &[u8] = b"error: demo execution failed\n";
+#[cfg(not(feature = "full"))]
+const INTERNAL_ERROR_TEXT: &[u8] = b"error: output failed\n";
+#[cfg(feature = "full")]
 const OTLP_JSONL_ERROR_TEXT: &[u8] = b"error: OTLP JSONL processing failed\n";
+#[cfg(feature = "full")]
 const KAFKA_JSON_ERROR_TEXT: &[u8] = b"error: Kafka JSON processing failed\n";
+#[cfg(feature = "full")]
 const KAFKA_MCP_ERROR_TEXT: &[u8] = b"error: Kafka MCP service failed\n";
+#[cfg(feature = "full")]
 const KAFKA_MCP_CHECKPOINT_IN_USE_TEXT: &[u8] = b"error: Kafka MCP service failed (checkpoint_in_use)\nhint: stop the existing Decant MCP server before restarting; do not delete its lock file\n";
 
+#[cfg(feature = "full")]
 fn main() -> ExitCode {
     let mut arguments = env::args_os();
     let _program = arguments.next();
@@ -107,6 +124,29 @@ fn main() -> ExitCode {
     ExitCode::from(2)
 }
 
+#[cfg(not(feature = "full"))]
+fn main() -> ExitCode {
+    let mut arguments = env::args_os().skip(1);
+    match arguments.next().as_deref() {
+        Some(first) if first == "investigate" => investigate::run(arguments),
+        Some(first) if first == "connect" || first == "doctor" => grafana::run(first, arguments),
+        Some(first) if first == "--help" && arguments.next().is_none() => write_success(HELP_TEXT),
+        Some(first) if first == "--version" && arguments.next().is_none() => {
+            write_success(VERSION_TEXT.as_bytes())
+        }
+        first => {
+            let error: &[u8] = if matches!(first, Some(value) if ["evidence", "demo", "ingest", "serve"].iter().any(|s| value == OsStr::new(s)))
+            {
+                b"error: command unavailable in investigation-only build\nhint: install the full build for file, streaming and MCP commands\n"
+            } else {
+                b"error: invalid usage; run decant --help\n"
+            };
+            let _ = io::stderr().lock().write_all(error);
+            ExitCode::from(2)
+        }
+    }
+}
+
 fn write_success(bytes: &[u8]) -> ExitCode {
     if io::stdout().lock().write_all(bytes).is_ok() {
         ExitCode::SUCCESS
@@ -120,6 +160,7 @@ fn internal_failure() -> ExitCode {
     ExitCode::from(1)
 }
 
+#[cfg(feature = "full")]
 fn write_otlp_success(bytes: &[u8]) -> ExitCode {
     if write_otlp_bytes(&mut io::stdout().lock(), bytes).is_ok() {
         ExitCode::SUCCESS
@@ -128,15 +169,18 @@ fn write_otlp_success(bytes: &[u8]) -> ExitCode {
     }
 }
 
+#[cfg(feature = "full")]
 fn write_otlp_bytes(writer: &mut impl Write, bytes: &[u8]) -> io::Result<()> {
     writer.write_all(bytes)
 }
 
+#[cfg(feature = "full")]
 fn otlp_jsonl_failure() -> ExitCode {
     let _result = io::stderr().lock().write_all(OTLP_JSONL_ERROR_TEXT);
     ExitCode::from(1)
 }
 
+#[cfg(feature = "full")]
 fn write_kafka_success(bytes: &[u8]) -> ExitCode {
     if write_kafka_bytes(&mut io::stdout().lock(), bytes).is_ok() {
         ExitCode::SUCCESS
@@ -145,15 +189,18 @@ fn write_kafka_success(bytes: &[u8]) -> ExitCode {
     }
 }
 
+#[cfg(feature = "full")]
 fn write_kafka_bytes(writer: &mut impl Write, bytes: &[u8]) -> io::Result<()> {
     writer.write_all(bytes)
 }
 
+#[cfg(feature = "full")]
 fn kafka_json_failure() -> ExitCode {
     let _result = io::stderr().lock().write_all(KAFKA_JSON_ERROR_TEXT);
     ExitCode::from(1)
 }
 
+#[cfg(feature = "full")]
 fn kafka_mcp_failure(error: kafka_mcp::KafkaMcpCliErrorV0) -> ExitCode {
     let bytes = match error {
         kafka_mcp::KafkaMcpCliErrorV0::CheckpointInUse => KAFKA_MCP_CHECKPOINT_IN_USE_TEXT,
@@ -163,7 +210,7 @@ fn kafka_mcp_failure(error: kafka_mcp::KafkaMcpCliErrorV0) -> ExitCode {
     ExitCode::from(1)
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "full"))]
 mod tests {
     use super::*;
 

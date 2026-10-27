@@ -26,8 +26,14 @@ const CONFIGURE: &[&str] = &[
     "seconds",
 ];
 fn run(dir: &Path, args: &[&str], input: &str, credentials: bool) -> Output {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_decant"));
+    let copied = dir.join("decant-under-test");
+    let mut command = Command::new(if copied.is_file() {
+        copied.as_os_str()
+    } else {
+        std::ffi::OsStr::new(env!("CARGO_BIN_EXE_decant"))
+    });
     command
+        .env_clear()
         .args(args)
         .current_dir(dir)
         .env_remove("SYNTHETIC_UNSET_MODEL_KEY")
@@ -60,10 +66,20 @@ impl Case {
         Self::with_sources(replies, false)
     }
     fn with_sources(mut replies: Vec<Reply>, all: bool) -> Self {
+        Self::with_binary(&mut replies, all, false)
+    }
+    fn with_binary(replies: &mut Vec<Reply>, all: bool, copy_binary: bool) -> Self {
         let mut dir = TempDir::new();
         dir.0 = fs::canonicalize(&dir.0).unwrap();
+        if copy_binary {
+            fs::copy(
+                env!("CARGO_BIN_EXE_decant"),
+                dir.0.join("decant-under-test"),
+            )
+            .unwrap();
+        }
         replies.insert(0, Reply::json(200, if all {r#"[{"uid":"metrics","type":"prometheus"},{"uid":"traces","type":"tempo"},{"uid":"logs","type":"loki"}]"#}else{DISCOVERY}));
-        let server = Server::new(replies);
+        let server = Server::new(std::mem::take(replies));
         fs::write(dir.0.join("ca.pem"), &server.ca).unwrap();
         let mut args = vec![
             "connect",
@@ -562,6 +578,20 @@ fn subcommand_help_is_offline_and_explicit() {
 #[cfg(unix)]
 #[test]
 fn interrupt_cancels_network_and_store_can_be_reopened() {
+    cancel_and_reopen("-INT");
+}
+#[cfg(unix)]
+#[test]
+fn termination_cancels_network_and_store_can_be_reopened() {
+    cancel_and_reopen("-TERM");
+}
+#[cfg(unix)]
+#[test]
+fn abrupt_termination_releases_store_without_partial_bundle() {
+    cancel_and_reopen("-KILL");
+}
+#[cfg(unix)]
+fn cancel_and_reopen(signal: &str) {
     use std::sync::{
         Arc,
         atomic::{AtomicBool, Ordering},
@@ -591,7 +621,7 @@ fn interrupt_cancels_network_and_store_can_be_reopened() {
     assert_eq!(case.server.requests.lock().unwrap().len(), 2);
     assert!(
         Command::new("kill")
-            .args(["-INT", &child.id().to_string()])
+            .args([signal, &child.id().to_string()])
             .status()
             .unwrap()
             .success()
@@ -607,12 +637,72 @@ fn interrupt_cancels_network_and_store_can_be_reopened() {
         panic!("interrupted CLI did not exit within the test deadline");
     }
     let out = child.wait_with_output().unwrap();
-    assert_eq!(out.status.code(), Some(130));
+    if signal == "-KILL" {
+        use std::os::unix::process::ExitStatusExt;
+        assert_eq!(out.status.signal(), Some(9));
+        assert!(out.stderr.is_empty());
+    } else {
+        assert_eq!(out.status.code(), Some(130));
+        assert!(String::from_utf8_lossy(&out.stderr).contains("cancelled"));
+    }
     assert!(out.stdout.is_empty());
-    assert!(String::from_utf8_lossy(&out.stderr).contains("cancelled"));
     assert!(case.bundles().is_empty());
     body_gate.store(true, Ordering::Release);
     let resumed = case.investigate(&[]);
     assert!(resumed.status.success());
     assert_eq!(case.bundles().len(), 1);
+}
+
+#[test]
+fn copied_binary_completes_guided_capture_and_offline_replay_without_source() {
+    let case = Case::with_binary(&mut metrics(), false, true);
+    case.configure();
+    let captured = report(&case.investigate(&[]));
+    let bundle = case.bundles().pop().unwrap();
+    let bytes = fs::read(&bundle).unwrap();
+    let Case { dir, server } = case;
+    drop(server);
+    let first = run(
+        &dir.0,
+        &[
+            "investigate",
+            "report",
+            "--bundle",
+            id(&captured),
+            "--format",
+            "json",
+        ],
+        "",
+        false,
+    );
+    let second = run(
+        &dir.0,
+        &[
+            "investigate",
+            "report",
+            "--bundle",
+            id(&captured),
+            "--format",
+            "json",
+        ],
+        "",
+        false,
+    );
+    assert!(first.status.success() && second.status.success());
+    assert!(first.stdout == second.stdout);
+    assert!(bytes == fs::read(bundle).unwrap());
+    let followup = run(
+        &dir.0,
+        &[
+            "investigate",
+            "follow-up",
+            "--bundle",
+            id(&captured),
+            "--focus",
+            "gaps",
+        ],
+        "",
+        false,
+    );
+    assert!(followup.status.success());
 }

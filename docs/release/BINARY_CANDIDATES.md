@@ -1,5 +1,9 @@
 # Native binary candidates and signing boundary
 
+For the smaller Grafana CLI without Kafka prerequisites, use the separate
+[investigation-only candidate](INVESTIGATION_BINARY.md). The full-build archive
+format and commands below are unchanged.
+
 The repository can build a **local unsigned candidate**, not an approved public
 download. Python 3.11+, the pinned Rust/native toolchain and previously fetched
 locked dependencies are build-time requirements. Packaging supports host-native

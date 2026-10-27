@@ -16,6 +16,7 @@ file	docs/release/EVIDENCE_EVALUATION.md
 file	docs/release/EVIDENCE_QUICKSTART.md
 file	docs/release/GRAFANA_INVESTIGATION.md
 file	docs/release/GRAFANA_SETUP.md
+file	docs/release/INVESTIGATION_BINARY.md
 file	docs/release/INVESTIGATION_EVALUATION.md
 file	docs/release/INVESTIGATION_REPLAY.md
 file	docs/release/INVESTIGATOR.md
@@ -53,6 +54,7 @@ file	tools/evidence_evaluation/baseline.py
 file	tools/evidence_evaluation/fixtures.py
 file	tools/evidence_evaluation/results.py
 file	tools/export_public_source_v0.py
+file	tools/investigation_candidate_v1.py
 file	tools/investigation_evaluation_v1.py
 file	tools/run_kafka_mcp_pilot_gate_v0.py
 file	tools/run_release_gate_v0.py
