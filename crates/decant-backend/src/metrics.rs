@@ -4,12 +4,13 @@ use crate::{
     grafana::{GrafanaV1, ProfileV1, label, quoted},
     transport::{BackendErrorV1 as E, MAX_RESPONSE_BYTES},
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{collections::BTreeSet, fmt};
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MetricsRecipeV1 {
     pub request_counter: String,
     pub error_label: String,
@@ -291,6 +292,34 @@ pub struct CaptureV1 {
 impl fmt::Debug for CaptureV1 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("CaptureV1 { redacted }")
+    }
+}
+impl CaptureV1 {
+    pub fn as_read(&self) -> crate::ReadV1 {
+        crate::ReadV1 {
+            plan: self.plan_id.clone(),
+            key: format!("metrics-{}", self.index),
+            response: self.response.clone(),
+            attempted: self.attempted,
+        }
+    }
+}
+impl MetricsPlanV1 {
+    pub fn restore_capture(&self, read: &crate::ReadV1) -> Result<CaptureV1, E> {
+        let index = read
+            .key
+            .strip_prefix("metrics-")
+            .and_then(|s| s.parse::<usize>().ok())
+            .ok_or(E::InvalidResponse)?;
+        if read.plan != self.plan_id
+            || read.key != format!("metrics-{index}")
+            || (!read.attempted && read.response != Err(E::BudgetExhausted))
+        {
+            return Err(E::InvalidResponse);
+        }
+        let mut c = self.capture(index, read.response.clone())?;
+        c.attempted = read.attempted;
+        Ok(c)
     }
 }
 pub struct MetricsComparisonV1 {

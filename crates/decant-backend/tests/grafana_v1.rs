@@ -76,6 +76,7 @@ async fn doctor_preserves_success_denial_and_empty_and_exact_scope() {
     assert!(requests[0].contains("time=1000"));
     assert!(requests[1].contains("start=700&end=1000&limit=1&spss=1"));
     assert!(requests[2].contains("/logs/loki/api/v1/query?"));
+    assert!(requests[2].contains("time=1000000000000"));
     assert!(
         !requests
             .iter()
