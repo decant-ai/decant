@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Decant</title>
+  <desc id="desc">A mint letter D with three incoming lines on a dark rounded square.</desc>
+  <rect width="512" height="512" rx="112" fill="#13252c"/>
+  <path d="M192 128h60c76 0 128 52 128 128s-52 128-128 128h-60" fill="none" stroke="#aff0d5" stroke-width="44" stroke-linecap="round"/>
+  <path d="M128 176h64m-84 80h128m-108 80h64" fill="none" stroke="#aff0d5" stroke-width="32" stroke-linecap="round"/>
+</svg>
