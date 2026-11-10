@@ -9,6 +9,10 @@ file	LICENSING.md
 file	README.md
 file	SECURITY.md
 file	crates/decant-state/Cargo.toml
+file	docs/assets/decant-icon.png
+file	docs/assets/decant-icon.svg
+file	docs/assets/investigation-flow-mobile.svg
+file	docs/assets/investigation-flow.svg
 file	docs/release/BINARY_CANDIDATES.md
 file	docs/release/BINARY_PACKAGE_README.md
 file	docs/release/COMMAND_REFERENCE.md
